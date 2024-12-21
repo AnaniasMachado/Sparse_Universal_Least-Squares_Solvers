@@ -38,7 +38,7 @@ def calculate_problem_results(A, H, problem):
 
     results[f"{problem}_||H||_1"] = matrix_vec_1_norm(H)
     results[f"{problem}_||H||_0"] = matrix_vec_0_norm(H)
-    results[f"{problem}_rank(H)"] = matrix_rank(H)
+    results[f"{problem}_r(H)"] = matrix_rank(H)
     AHA = np.dot(A, np.dot(H, A))
     results[f"{problem}_||AHA - A||_F"] = matrix_frobenius_norm(AHA - A)
     HAH = np.dot(H, np.dot(A, H))
