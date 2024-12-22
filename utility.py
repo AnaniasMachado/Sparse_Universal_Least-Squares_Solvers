@@ -68,7 +68,7 @@ def calculate_problem_results(A, H, problem):
     results[f"{problem}_||A^TAH - AT||_F"] = matrix_frobenius_norm(ATAH - A.T)
     return results
 
-def calculate_problem_results_3(A, H, b, lambda_values, problem):
+def calculate_problem_results_3(A, H, b, problem):
     results = dict()
 
     results[f"{problem}_||H||_1"] = matrix_vec_1_norm(H)
@@ -83,8 +83,6 @@ def calculate_problem_results_3(A, H, b, lambda_values, problem):
     results[f"{problem}_||(HA)^T - HA||_F"] = matrix_frobenius_norm(HA_T - HA)
     AHb = np.dot(A, np.dot(H, b))
     results[f"{problem}_||AHb - b||_1"] = vec_1_norm(AHb - b)
-    Cs = np.dot(lambda_values.T, AHb - b)
-    results[f"{problem}_|lambda^T(AHb - b)|"] = np.abs(Cs)
     return results
 
 def problem_1_norm_P1_viable_solution(A, H, m, n):
@@ -132,18 +130,12 @@ def problem_1_norm_P1_P3_viable_solution(A, H, m, n):
                 return False
     return True
 
-def problem_1_norm_PN_viable_solution(A, H, b, lambda_values, m):
+def problem_1_norm_PN_viable_solution(A, H, b, m):
     epsilon = 10 ** -5
     AHb = np.dot(A, np.dot(H, b))
     for i in range(m):
         if np.abs(AHb[i] - b[i]) > epsilon:
             print("AHb - b == 0 violation")
-            return False
-        # if lambda_values[i] < -epsilon:
-        #     print("lambda >= 0 violation")
-        #     return False
-        if np.abs(lambda_values[i] * (AHb[i] - b[i])) > epsilon:
-            print("lambda^T * (AHb - b) == 0 violation")
             return False
     return True
 

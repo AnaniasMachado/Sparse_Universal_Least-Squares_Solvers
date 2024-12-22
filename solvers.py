@@ -364,7 +364,7 @@ def problem_2_norm_KKT_solver(A, b):
 
 def problem_1_norm_PN_solver(A, b):
     # Solves the following problem to get the lagrange multipliers for the PN equations
-    lambda_values = problem_2_norm_KKT_solver(A=A, b=b)
+    # lambda_values = problem_2_norm_KKT_solver(A=A, b=b)
 
     # Extracts matrix dimensions
     m = A.shape[0]
@@ -401,10 +401,6 @@ def problem_1_norm_PN_solver(A, b):
     AHb = np.dot(A, np.dot(H, b))
     for i in range(m):
         model.addConstr(AHb[i] == b[i], name=f"constraint_eq_1_i={i}")
-
-    # Adds constraint: Complementary slackness lambda^T * (AHb - b) = 0
-    for i in range(m):
-        model.addConstr(lambda_values[i] * (AHb[i] - b[i]) == 0, name=f"constraint_eq_2_i={i}")
 
     # Adds constraint: Z - H >= 0
     Z_minus_H = Z - H
