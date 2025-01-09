@@ -40,8 +40,24 @@ def matrix_vec_1_norm(H):
 def matrix_vec_0_norm(H):
     return np.linalg.norm(H.flatten(), ord=0)
 
+def matrix_vec_inf_norm(H):
+    return max([np.abs(h) for h in H.flatten()])
+
 def matrix_frobenius_norm(H):
     return np.linalg.norm(H, ord="fro")
+
+def matrix_2_1_norm(H):
+    total = 0
+    for i in range(H.shape[0]):
+        total += np.linalg.norm(H[i, :], ord=2)
+    return total
+
+def matrix_2_0_norm(H):
+    total = 0
+    for i in range(H.shape[0]):
+        if np.linalg.norm(H[i, :], ord=2) > epsilon:
+            total += 1
+    return total
 
 def matrix_rank(H):
     U, S, VT = np.linalg.svd(H)
@@ -83,6 +99,16 @@ def calculate_problem_results_3(A, H, b, problem):
     results[f"{problem}_||(HA)^T - HA||_F"] = matrix_frobenius_norm(HA_T - HA)
     AHb = np.dot(A, np.dot(H, b))
     results[f"{problem}_||AHb - b||_1"] = vec_1_norm(AHb - b)
+    return results
+
+def calculate_problem_results_5(A, H, problem):
+    results = dict()
+
+    results[f"{problem}_r(H)"] = matrix_rank(H)
+    results[f"{problem}_||H||_1"] = matrix_vec_1_norm(H)
+    results[f"{problem}_||H||_0"] = matrix_vec_0_norm(H)
+    results[f"{problem}_||H||_2,1"] = matrix_2_1_norm(H)
+    results[f"{problem}_||H||_2,0"] = matrix_2_0_norm(H)
     return results
 
 def problem_1_norm_P1_viable_solution(A, H, m, n):
@@ -161,5 +187,63 @@ def problem_1_norm_MSN_viable_solution(A, H, m):
     for i in range(m):
         for j in range(m):
             if np.abs(HAA_T[i, j] - A_T[i, j]) > epsilon:
+                return False
+    return True
+
+def problem_1_norm_P1_P3_P4_viable_solution(A, H, m, n):
+    AHA = np.dot(A, np.dot(H, A))
+    for i in range(m):
+        for j in range(n):
+            if np.abs(AHA[i, j] - A[i, j]) > epsilon:
+                return False
+    AH_T = np.dot(A, H).T
+    AH = np.dot(A, H)
+    for i in range(m):
+        for j in range(m):
+            if np.abs(AH_T[i, j] - AH[i, j]) > epsilon:
+                return False
+    HA_T = np.dot(H, A).T
+    HA = np.dot(H, A)
+    for i in range(n):
+        for j in range(n):
+            if np.abs(HA_T[i, j] - HA[i, j]) > epsilon:
+                return False
+    return True
+
+def problem_1_norm_PLS_P4_viable_solution(A, H, m, n):
+    ATAH = np.dot(A.T, np.dot(A, H))
+    A_T = A.T
+    for i in range(n):
+        for j in range(m):
+            if np.abs(ATAH[i, j] - A_T[i, j]) > epsilon:
+                return False
+    HA_T = np.dot(H, A).T
+    HA = np.dot(H, A)
+    for i in range(n):
+        for j in range(n):
+            if np.abs(HA_T[i, j] - HA[i, j]) > epsilon:
+                return False
+    return True
+
+def problem_1_norm_PMN_P3_viable_solution(A, H, m, n):
+    AATHT = np.dot(A, np.dot(A.T, H.T))
+    for i in range(m):
+        for j in range(n):
+            if np.abs(AATHT[i, j] - A[i, j]) > epsilon:
+                return False
+    AH_T = np.dot(A, H).T
+    AH = np.dot(A, H)
+    for i in range(m):
+        for j in range(m):
+            if np.abs(AH_T[i, j] - AH[i, j]) > epsilon:
+                return False
+    return True
+
+def problem_1_norm_PMX_viable_solution(A, H, m, n):
+    LeftHS = np.dot(A, np.dot(A.T, H.T)) + np.dot(H.T, np.dot(A.T, A))
+    RightHS = 2*A
+    for i in range(m):
+        for j in range(n):
+            if np.abs(LeftHS[i, j] - RightHS[i, j]) > epsilon:
                 return False
     return True
