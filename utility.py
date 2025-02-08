@@ -37,8 +37,15 @@ def vec_1_norm(x):
 def matrix_vec_1_norm(H):
     return np.linalg.norm(H.flatten(), ord=1)
 
+# def matrix_vec_0_norm(H):
+#     return np.linalg.norm(H.flatten(), ord=0)
+
 def matrix_vec_0_norm(H):
-    return np.linalg.norm(H.flatten(), ord=0)
+    total = 0
+    for x in H.flatten():
+        if x > epsilon:
+            total += 1
+    return total
 
 def matrix_vec_inf_norm(H):
     return max([np.abs(h) for h in H.flatten()])
@@ -110,6 +117,10 @@ def calculate_problem_results_5(A, H, problem):
     results[f"{problem}_||H||_2,1"] = matrix_2_1_norm(H)
     results[f"{problem}_||H||_2,0"] = matrix_2_0_norm(H)
     return results
+
+def save_H(experiment, problem, m, H):
+    filepath = f"./H_stars/experiment_{experiment}_problem_{problem}_m_{m}.npy"
+    np.save(filepath, H)
 
 def problem_1_norm_P1_viable_solution(A, H, m, n):
     AHA = np.dot(A, np.dot(H, A))

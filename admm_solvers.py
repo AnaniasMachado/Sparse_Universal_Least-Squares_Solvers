@@ -16,7 +16,7 @@ def soft_thresholding(a, kappa):
     elif a < -kappa:
         return a + kappa
 
-def admm1_123(A, rho, epsilon_abs=10 ** -4, epsilon_rel=10 ** -4):
+def admm1_123(A, rho=3, epsilon_abs=10 ** -4, epsilon_rel=10 ** -4):
     # Gets dimensions of matrix A
     m = A.shape[0]
     n = A.shape[1]
@@ -110,7 +110,7 @@ def admm1e_123(A, rho=3, epsilon=10 ** -4):
     H = np.dot(V1, np.dot(D_inv, U1.T)) + np.dot(V2, np.dot(Z, U1.T))
     return H
 
-def admm1_134(A, rho=3, epsilon_abs=10 ** -4, epsilon_rel=10 ** -4):
+def admm1_134(A, rho=3, epsilon_abs=10 ** -5, epsilon_rel=10 ** -5):
     # Gets dimensions of matrix A
     m = A.shape[0]
     n = A.shape[1]
@@ -144,14 +144,14 @@ def admm1_134(A, rho=3, epsilon_abs=10 ** -4, epsilon_rel=10 ** -4):
         Lambda = Lambda + np.dot(V1, np.dot(D_inv, U1.T)) + np.dot(V2, np.dot(W, U2.T)) - Ek
         # Calculates stop criterion variables
         rk = np.dot(V1, np.dot(D_inv, U1.T)) + np.dot(V2, np.dot(W, U2.T)) - Ek
-        sk = rho * np.dot(V2.T, np.dot(Ek - Ekm, U1))
+        sk = rho * np.dot(V2.T, np.dot(Ek - Ekm, U2))
         matrix_norms = [
             matrix_frobenius_norm(Ek),
             matrix_frobenius_norm(np.dot(V2, np.dot(W, U2.T))),
             matrix_frobenius_norm(np.dot(V1, np.dot(D_inv, U1.T)))
         ]
         primal_upper_bound = epsilon_abs * np.sqrt(m*n) + epsilon_rel * max(matrix_norms)
-        aux_var = matrix_frobenius_norm(np.dot(V2.T, np.dot(Lambda, U1)))
+        aux_var = matrix_frobenius_norm(np.dot(V2.T, np.dot(Lambda, U2)))
         dual_upper_bound = epsilon_abs * np.sqrt((n-r)*r) + epsilon_rel * rho * aux_var
         # Checks stop criterion
         if (matrix_frobenius_norm(rk) <= primal_upper_bound) and (matrix_frobenius_norm(sk) <= dual_upper_bound):
@@ -162,7 +162,7 @@ def admm1_134(A, rho=3, epsilon_abs=10 ** -4, epsilon_rel=10 ** -4):
     H = np.dot(V1, np.dot(D_inv, U1.T)) + np.dot(V2, np.dot(W, U2.T))
     return H
 
-def admm1e_134(A, rho=3, epsilon=10 ** -4):
+def admm1e_134(A, rho=3, epsilon=10 ** -5):
     # Gets dimensions of matrix A
     m = A.shape[0]
     n = A.shape[1]
@@ -196,7 +196,7 @@ def admm1e_134(A, rho=3, epsilon=10 ** -4):
         Lambda = Lambda + np.dot(V1, np.dot(D_inv, U1.T)) + np.dot(V2, np.dot(W, U2.T)) - Ek
         # Calculates stop criterion variables
         rk = np.dot(V1, np.dot(D_inv, U1.T)) + np.dot(V2, np.dot(W, U2.T)) - Ek
-        sk = rho * np.dot(V2.T, np.dot(Ek - Ekm, U1))
+        sk = rho * np.dot(V2.T, np.dot(Ek - Ekm, U2))
         # Checks stop criterion
         if (matrix_frobenius_norm(rk) <= epsilon) and (matrix_frobenius_norm(sk) <= epsilon):
             break
