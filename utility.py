@@ -1,4 +1,8 @@
 import numpy as np
+import os
+import scipy.io
+import scipy.sparse
+import re
 
 epsilon = 10 ** -5
 
@@ -118,9 +122,56 @@ def calculate_problem_results_5(A, H, problem):
     results[f"{problem}_||H||_2,0"] = matrix_2_0_norm(H)
     return results
 
+def calculate_problem_results_6(A, H, problem):
+    results = dict()
+
+    results[f"{problem}_||H||_0"] = matrix_vec_0_norm(H)
+    results[f"{problem}_||H||_1"] = matrix_vec_1_norm(H)
+    return results
+
 def save_H(experiment, problem, m, H):
     filepath = f"./H_stars/experiment_{experiment}_problem_{problem}_m_{m}.npy"
     np.save(filepath, H)
+
+def get_experiment_matrices_filepath(experiment):
+    # Defines directory path
+    diretory = f"./Experiment_Matrices/Experiment_{experiment}"
+
+    # Creates a list with every matrix name
+    matrices_filepath = []
+    for filename in os.listdir(diretory):
+        filepath = os.path.join(diretory, filename)
+        if os.path.isfile(filepath):
+            matrix_filepath = f"{diretory}/{filename}"
+            matrices_filepath.append(matrix_filepath)
+    return matrices_filepath
+
+def read_matrix(matrix_filepath):
+    # Loads file .mat
+    mat = scipy.io.loadmat(matrix_filepath)
+
+    # Reads matrix
+    matrix = mat['matrix']
+
+    if scipy.sparse.issparse(matrix):
+        # Converts to dense matrix
+        dense_matrix = matrix.toarray()
+        return dense_matrix
+    return matrix
+
+def get_m_n_r_d_from_matrix_filepath(matrix_filepath):
+    # Using regex to find values of m, n, r and d
+    match = re.search(r'm(\d+)_n(\d+)_r(\d+)_d(\d+)', matrix_filepath)
+
+    if match:
+        m = int(match.group(1))
+        n = int(match.group(2))
+        r = int(match.group(3))
+        d = int(match.group(4))
+        
+        return [m, n, r, d / 100]
+    else:
+        raise Exception("ReadError: Could not read all values.")
 
 def problem_1_norm_P1_viable_solution(A, H, m, n):
     AHA = np.dot(A, np.dot(H, A))
@@ -256,5 +307,37 @@ def problem_1_norm_PMX_viable_solution(A, H, m, n):
     for i in range(m):
         for j in range(n):
             if np.abs(LeftHS[i, j] - RightHS[i, j]) > epsilon:
+                return False
+    return True
+
+def problem_1_norm_P1_sym_viable_solution(A, H, m, n):
+    AHA = np.dot(A, np.dot(H, A))
+    for i in range(m):
+        for j in range(n):
+            if np.abs(AHA[i, j] - A[i, j]) > epsilon:
+                return False
+    H_T = H.T
+    for i in range(n):
+        for j in range(m):
+            if np.abs(H[i, j] - H_T[i, j]) > epsilon:
+                return False
+    return True
+
+def problem_1_norm_P1_P2_P3_viable_solution(A, H, m, n):
+    AHA = np.dot(A, np.dot(H, A))
+    for i in range(m):
+        for j in range(n):
+            if np.abs(AHA[i, j] - A[i, j]) > epsilon:
+                return False
+    HAH = np.dot(H, np.dot(A, H))
+    for i in range(n):
+        for j in range(m):
+            if np.abs(HAH[i, j] - H[i, j]) > epsilon:
+                return False
+    AH_T = np.dot(A, H).T
+    AH = np.dot(A, H)
+    for i in range(m):
+        for j in range(m):
+            if np.abs(AH_T[i, j] - AH[i, j]) > epsilon:
                 return False
     return True

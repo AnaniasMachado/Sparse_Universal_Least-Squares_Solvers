@@ -16,7 +16,7 @@ def soft_thresholding(a, kappa):
     elif a < -kappa:
         return a + kappa
 
-def admm1_123(A, rho=3, epsilon_abs=10 ** -4, epsilon_rel=10 ** -4):
+def admm1_123(A, rho=3, epsilon_abs=10 ** -5, epsilon_rel=10 ** -5):
     # Gets dimensions of matrix A
     m = A.shape[0]
     n = A.shape[1]
@@ -67,7 +67,7 @@ def admm1_123(A, rho=3, epsilon_abs=10 ** -4, epsilon_rel=10 ** -4):
     H = np.dot(V1, np.dot(D_inv, U1.T)) + np.dot(V2, np.dot(Z, U1.T))
     return H
 
-def admm1e_123(A, rho=3, epsilon=10 ** -4):
+def admm1e_123(A, rho=3, epsilon=10 ** -5):
     # Gets dimensions of matrix A
     m = A.shape[0]
     n = A.shape[1]

@@ -1,0 +1,7 @@
+P1 e P3 - testado e confirmado, correto.
+
+P1,P2,P3 - Testado e confirmado, correto.
+
+P1 - Testado e confirmado, correto.
+
+P1sym - Testado e confirmado, correto.
