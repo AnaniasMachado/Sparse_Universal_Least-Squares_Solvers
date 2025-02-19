@@ -1,4 +1,4 @@
-function call_local_search_procedure(A_path, r, m, n, R, C, funcName, savePath)
+function call_local_search_procedure(A_path, r, m, n, funcName, savePath)
     % Loads matrix A in the specified path
     A = load(A_path);
     
