@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 from utility import *
 
@@ -16,7 +17,7 @@ def soft_thresholding(a, kappa):
     elif a < -kappa:
         return a + kappa
 
-def admm1_123(A, rho=3, epsilon_abs=10 ** -5, epsilon_rel=10 ** -5):
+def admm1_123(A, rho=3, epsilon_abs=10 ** -4, epsilon_rel=10 ** -4, time_limit=2*60*60):
     # Gets dimensions of matrix A
     m = A.shape[0]
     n = A.shape[1]
@@ -34,6 +35,7 @@ def admm1_123(A, rho=3, epsilon_abs=10 ** -5, epsilon_rel=10 ** -5):
     # Calculates initial variables
     Lambda, Ekm = initial_variables(V1=V1, U1=U1, D_inv=D_inv, rho=rho)
     Ek = np.zeros((n, m))
+    start_time = time.time()
     while True:
         # Updates variable J
         J = Ekm - np.dot(V1, np.dot(D_inv, U1.T)) - Lambda
@@ -63,11 +65,15 @@ def admm1_123(A, rho=3, epsilon_abs=10 ** -5, epsilon_rel=10 ** -5):
             break
         # Makes Ek the new Ek-1
         Ekm = Ek
+        current_time = time.time()
+        if current_time - start_time > time_limit:
+            print("TimeLimit: ADMM exceed time limit to solve problem.")
+            return "-"
     # Calculates output matrix H
     H = np.dot(V1, np.dot(D_inv, U1.T)) + np.dot(V2, np.dot(Z, U1.T))
     return H
 
-def admm1e_123(A, rho=3, epsilon=10 ** -5):
+def admm1e_123(A, rho=3, epsilon=10 ** -4, time_limit=2*60*60):
     # Gets dimensions of matrix A
     m = A.shape[0]
     n = A.shape[1]
@@ -85,6 +91,7 @@ def admm1e_123(A, rho=3, epsilon=10 ** -5):
     # Calculates initial variables
     Lambda, Ekm = initial_variables(V1=V1, U1=U1, D_inv=D_inv, rho=rho)
     Ek = np.zeros((n, m))
+    start_time = time.time()
     while True:
         # Updates variable J
         J = Ekm - np.dot(V1, np.dot(D_inv, U1.T)) - Lambda
@@ -106,11 +113,15 @@ def admm1e_123(A, rho=3, epsilon=10 ** -5):
             break
         # Makes Ek the new Ek-1
         Ekm = Ek
+        current_time = time.time()
+        if current_time - start_time > time_limit:
+            print("TimeLimit: ADMM exceed time limit to solve problem.")
+            return "-"
     # Calculates output matrix H
     H = np.dot(V1, np.dot(D_inv, U1.T)) + np.dot(V2, np.dot(Z, U1.T))
     return H
 
-def admm1_134(A, rho=3, epsilon_abs=10 ** -5, epsilon_rel=10 ** -5):
+def admm1_134(A, rho=3, epsilon_abs=10 ** -5, epsilon_rel=10 ** -5, time_limit=2*60*60):
     # Gets dimensions of matrix A
     m = A.shape[0]
     n = A.shape[1]
@@ -129,6 +140,7 @@ def admm1_134(A, rho=3, epsilon_abs=10 ** -5, epsilon_rel=10 ** -5):
     # Calculates initial variables
     Lambda, Ekm = initial_variables(V1=V1, U1=U1, D_inv=D_inv, rho=rho)
     Ek = np.zeros((n, m))
+    start_time = time.time()
     while True:
         # Updates variable J
         J = Ekm - np.dot(V1, np.dot(D_inv, U1.T)) - Lambda
@@ -158,11 +170,15 @@ def admm1_134(A, rho=3, epsilon_abs=10 ** -5, epsilon_rel=10 ** -5):
             break
         # Makes Ek the new Ek-1
         Ekm = Ek
+        current_time = time.time()
+        if current_time - start_time > time_limit:
+            print("TimeLimit: ADMM exceed time limit to solve problem.")
+            return "-"
     # Calculates output matrix H
     H = np.dot(V1, np.dot(D_inv, U1.T)) + np.dot(V2, np.dot(W, U2.T))
     return H
 
-def admm1e_134(A, rho=3, epsilon=10 ** -5):
+def admm1e_134(A, rho=3, epsilon=10 ** -5, time_limit=2*60*60):
     # Gets dimensions of matrix A
     m = A.shape[0]
     n = A.shape[1]
@@ -181,6 +197,7 @@ def admm1e_134(A, rho=3, epsilon=10 ** -5):
     # Calculates initial variables
     Lambda, Ekm = initial_variables(V1=V1, U1=U1, D_inv=D_inv, rho=rho)
     Ek = np.zeros((n, m))
+    start_time = time.time()
     while True:
         # Updates variable J
         J = Ekm - np.dot(V1, np.dot(D_inv, U1.T)) - Lambda
@@ -202,6 +219,10 @@ def admm1e_134(A, rho=3, epsilon=10 ** -5):
             break
         # Makes Ek the new Ek-1
         Ekm = Ek
+        current_time = time.time()
+        if current_time - start_time > time_limit:
+            print("TimeLimit: ADMM exceed time limit to solve problem.")
+            return "-"
     # Calculates output matrix H
     H = np.dot(V1, np.dot(D_inv, U1.T)) + np.dot(V2, np.dot(W, U2.T))
     return H

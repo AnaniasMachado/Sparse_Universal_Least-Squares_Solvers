@@ -1,13 +1,13 @@
-% A_filepath = "./Experiment_Matrices/Experiment_6/experiment_6_matrix_m500_n250_r25_d10_idx1.mat";
-base_dir = fileparts(mfilename('fullpath'));
+% base_dir = fileparts(mfilename('fullpath'));
 
-A_filepath = fullfile(base_dir, "Experiment_Matrices", "Experiment_6", "experiment_6_matrix_m500_n250_r25_d10_idx1.mat");
-r = 125;
-m = 500;
-n = 250;
-R = 1:100;
-C = 1:200;
-func_name = "LSFI_Det";
-save_path = "Local_Search_Matrices/Experiment_6";
+% A_filepath = fullfile(base_dir, "Experiment_Matrices", "Experiment_6", "experiment_6_matrix_m500_n250_r25_d10_idx1.mat");
+expn = 7;
+r_values = [25, 35];
+d_values = [0.1, 0.25];
+m = 100;
+n = 50;
+n_mtx = 5;
+% output_dir = base_dir;
+output_dir = "";
 
-call_local_search_procedure(A_filepath, r, m, n, R, C, func_name, save_path);
+generate_experiment_matrices(expn, m, n, r_values, d_values, n_mtx, output_dir);
