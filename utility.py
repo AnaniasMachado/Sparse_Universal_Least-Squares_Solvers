@@ -174,6 +174,7 @@ def get_m_n_r_d_from_matrix_filepath(matrix_filepath):
         raise Exception("ReadError: Could not read all values.")
 
 def problem_1_norm_P1_viable_solution(A, H, m, n):
+    m, n = A.shape
     AHA = np.dot(A, np.dot(H, A))
     for i in range(m):
         for j in range(n):
@@ -182,6 +183,7 @@ def problem_1_norm_P1_viable_solution(A, H, m, n):
     return True
 
 def problem_1_norm_PLS_viable_solution(A, H, m, n):
+    m, n = A.shape
     ATAH = np.dot(A.T, np.dot(A, H))
     AT = A.T
     for i in range(n):
@@ -191,6 +193,7 @@ def problem_1_norm_PLS_viable_solution(A, H, m, n):
     return True
 
 def problem_1_norm_P1_PLS_viable_solution(A, H, m, n):
+    m, n = A.shape
     AHA = np.dot(A, np.dot(H, A))
     for i in range(m):
         for j in range(n):
@@ -205,6 +208,7 @@ def problem_1_norm_P1_PLS_viable_solution(A, H, m, n):
     return True
 
 def problem_1_norm_P1_P3_viable_solution(A, H, m, n):
+    m, n = A.shape
     AHA = np.dot(A, np.dot(H, A))
     for i in range(m):
         for j in range(n):
@@ -219,7 +223,7 @@ def problem_1_norm_P1_P3_viable_solution(A, H, m, n):
     return True
 
 def problem_1_norm_PN_viable_solution(A, H, b, m):
-    epsilon = 10 ** -5
+    m, n = A.shape
     AHb = np.dot(A, np.dot(H, b))
     for i in range(m):
         if np.abs(AHb[i] - b[i]) > epsilon:
@@ -228,7 +232,7 @@ def problem_1_norm_PN_viable_solution(A, H, b, m):
     return True
 
 def problem_1_norm_P1_P4_viable_solution(A, H, m):
-    epsilon = 10 ** -5
+    m, n = A.shape
     AHA = np.dot(A, np.dot(H, A))
     for i in range(m):
         for j in range(m):
@@ -243,6 +247,7 @@ def problem_1_norm_P1_P4_viable_solution(A, H, m):
     return True
 
 def problem_1_norm_MSN_viable_solution(A, H, m):
+    m, n = A.shape
     epsilon = 10 ** -5
     HAA_T = np.dot(H, np.dot(A, A.T))
     A_T = A.T
@@ -253,6 +258,7 @@ def problem_1_norm_MSN_viable_solution(A, H, m):
     return True
 
 def problem_1_norm_P1_P3_P4_viable_solution(A, H, m, n):
+    m, n = A.shape
     AHA = np.dot(A, np.dot(H, A))
     for i in range(m):
         for j in range(n):
@@ -273,6 +279,7 @@ def problem_1_norm_P1_P3_P4_viable_solution(A, H, m, n):
     return True
 
 def problem_1_norm_PLS_P4_viable_solution(A, H, m, n):
+    m, n = A.shape
     ATAH = np.dot(A.T, np.dot(A, H))
     A_T = A.T
     for i in range(n):
@@ -288,6 +295,7 @@ def problem_1_norm_PLS_P4_viable_solution(A, H, m, n):
     return True
 
 def problem_1_norm_PMN_P3_viable_solution(A, H, m, n):
+    m, n = A.shape
     AATHT = np.dot(A, np.dot(A.T, H.T))
     for i in range(m):
         for j in range(n):
@@ -302,6 +310,7 @@ def problem_1_norm_PMN_P3_viable_solution(A, H, m, n):
     return True
 
 def problem_1_norm_PMX_viable_solution(A, H, m, n):
+    m, n = A.shape
     LeftHS = np.dot(A, np.dot(A.T, H.T)) + np.dot(H.T, np.dot(A.T, A))
     RightHS = 2*A
     for i in range(m):
@@ -311,6 +320,7 @@ def problem_1_norm_PMX_viable_solution(A, H, m, n):
     return True
 
 def problem_1_norm_P1_sym_viable_solution(A, H, m, n):
+    m, n = A.shape
     AHA = np.dot(A, np.dot(H, A))
     for i in range(m):
         for j in range(n):
@@ -324,6 +334,7 @@ def problem_1_norm_P1_sym_viable_solution(A, H, m, n):
     return True
 
 def problem_1_norm_P1_P2_P3_viable_solution(A, H, m, n):
+    m, n = A.shape
     AHA = np.dot(A, np.dot(H, A))
     for i in range(m):
         for j in range(n):

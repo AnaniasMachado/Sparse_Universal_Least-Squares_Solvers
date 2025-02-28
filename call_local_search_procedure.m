@@ -1,4 +1,4 @@
-function call_local_search_procedure(A_path, r, m, n, funcName, savePath)
+function call_local_search_procedure(A_path, r, m, n, funcName, savePath, hatA_flag)
     % Loads matrix A in the specified path
     A = load(A_path);
     
@@ -6,6 +6,11 @@ function call_local_search_procedure(A_path, r, m, n, funcName, savePath)
     if isfield(A, 'matrix')  % Checks if structure contains matrix
         A = A.matrix;  % Atributes matrix if in structure
         A = full(A); % Converts A to a dense matrix
+    end
+
+    if (hatA_flag == 1)
+        A = A' * A;
+        [m, n] = size(A);
     end
 
     addpath('Local_Search/nsub');
@@ -22,7 +27,7 @@ function call_local_search_procedure(A_path, r, m, n, funcName, savePath)
         case 'LSFI_Det_Symmetric'
             addpath('Local_Search/P1sym');
             [norm, time, swaps, R] = LSFI_Det_Symmetric(A, r, m, R);
-            A_hat = inv(A(R, R));
+            A_hat = A(R, R);
             matrix = zeros(n, m);
             matrix(R, R) = inv(A_hat);
         case 'LSFI_Det_P3'
