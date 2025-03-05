@@ -20,16 +20,19 @@ end
 
 function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::Float64, fixed_tol::Float64, time_limit::Int64)
     m, n = size(A)
-    U, S, V = svd(A)
-    S = Diagonal(S)
+    U, S, V = svd(A, full=true)
+    # S = Diagonal(S)
     r = count_singular_values(S)
+    D = S[1:r]
+    D_inv = spdiam(1 ./ D)
     U1 = U[:, 1:r]
     V1 = V[:, 1:r]
     V2 = V[:, r+1:end]
-    D_inv = zeros(r, r)
-    for i in 1:r
-        D_inv[i, i] = 1 / S[i, i]
-    end
+    # D_inv = zeros(r, r)
+    # for i in 1:r
+    #     D_inv[i, i] = 1 / S[i, i]
+    # end
+
     V1DinvU1T = V1 * D_inv * U1'
     V1DinvU1T_F = norm(V1DinvU1T)
     Z = zeros(n - r, r)
