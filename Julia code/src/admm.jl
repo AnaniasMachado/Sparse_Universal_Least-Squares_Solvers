@@ -39,7 +39,15 @@ function admm1norm(ginvInit::GinvInit;eps_abs=1e-4,eps_rel=1e-4,eps_opt=1e-5,rho
             error("stop limit not defined correctly")
         end
         iter += 1
-        if iter == max_iter || ((time_ns() - time_start)/1e9) >= 7200
+        if iter % 100 == 0
+            println("ADMM GAB iteration: $iter")
+            println("ADMM GAB primal residual: $primal_res)")
+            println("ADMM GAB dual residual: $dual_res)")
+        end
+        # if iter == max_iter || ((time_ns() - time_start)/1e9) >= 7200
+        #     break
+        # end
+        if ((time_ns() - time_start)/1e9) >= 7200
             break
         end
         if (primal_res <= eps_p && dual_res <= eps_d)

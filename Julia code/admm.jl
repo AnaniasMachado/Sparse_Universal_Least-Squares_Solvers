@@ -44,7 +44,9 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
     H = zeros(n, m)
     Lambda, Ekm = variables_initialization(V1, U1, D_inv, rho)
     start_time = time()
+    k = 0
     while true
+        k += 1
         # Updates J
         # J = Ekm - V1DinvU1T - Lambda
         # Updates Zk
@@ -79,6 +81,11 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
         #     H = V1DinvU1T + V2ZU1T
         #     break
         # end
+        if k % 100 == 0
+            println("ADMM iteration: $k")
+            println("ADMM primal residual: $rk_F)")
+            println("ADMM dual residual: $sk_F)")
+        end
         if (rk_F <= primal_upper_bound) && (sk_F <= dual_upper_bound)
             break
         end
