@@ -18,7 +18,7 @@ function variables_initialization(V1::Matrix{Float64}, U1::Matrix{Float64}, D_in
     return Lambda, E
 end
 
-function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::Float64, fixed_tol::Bool, time_limit::Int64)
+function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::Float64, fixed_tol::Float64, time_limit::Int64)
     m, n = size(A)
     U, S, V = svd(A)
     S = Diagonal(S)
@@ -30,29 +30,34 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
     for i in 1:r
         D_inv[i, i] = 1 / S[i, i]
     end
+    V1DinvU1T = V1 * D_inv * U1'
+    V1DinvU1T_F = norm(V1DinvU1T)
     Z = zeros(n - r, r)
+    H = zeros(n, m)
     Lambda, Ekm = variables_initialization(V1, U1, D_inv, rho)
     start_time = time()
     while true
         # Updates J
-        J = Ekm - V1 * D_inv * U1' - Lambda
+        J = Ekm - V1DinvU1T - Lambda
         # Updates Zk
         Z = V2' * J * U1
+        V2ZU1T = V2 * Z * U1'
         # Updates Y
-        Y = V1 * D_inv * U1' + V2 * Z * U1' + Lambda
+        Y = V1DinvU1T + V2ZU1T + Lambda
         # Updates Ek
         Ek = soft_thresholding_matrix(Y, 1/rho)
         # Updates Lambdak
-        Lambda = Lambda + V1 * D_inv * U1' + V2 * Z * U1' - Ek
+        Lambda = Lambda + V1DinvU1T + V2ZU1T - Ek
         # Calculates stop criterion variables
-        rk = V1 * D_inv * U1' + V2 * Z * U1' - Ek
+        rk = V1DinvU1T + V2ZU1T - Ek
         sk = rho * V2' * (Ek - Ekm) * U1
-        matrix_norms = [norm(Ek), norm(V2 * Z * U1'), norm(V1 * D_inv * U1')]
+        matrix_norms = [norm(Ek), norm(V2ZU1T), V1DinvU1T_F]
         primal_upper_bound = eps_abs * sqrt(m*n) + eps_rel * maximum(matrix_norms)
         aux_var = norm(V2' * Lambda * U1)
         dual_upper_bound = eps_abs * sqrt((n-r)*r) + eps_rel * rho * aux_var
         # Checks stop criterion
         if (norm(rk) <= primal_upper_bound) && (norm(sk) <= dual_upper_bound)
+            H = V1DinvU1T + V2ZU1T
             break
         end
         # Makes Ek the new Ek-1
@@ -63,8 +68,6 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
             return "-"
         end
     end
-    # Calculates output matrix H
-    H = V1 * D_inv * U1' + V2 * Z * U1'
     return H
 end
 
