@@ -83,8 +83,10 @@ for mat_file in mat_files
         AMP_norm_1 = [AMP_norm_1],
         ADMM_H_norm_0 = [ADMM_H_norm_0],
         ADMM_H_norm_1 = [ADMM_H_norm_1],
+        ADMM_time = [ADMM_time],
         ADMM_GAB_H_norm_0 = [ADMM_GAB_H_norm_0],
-        ADMM_GAB_H_norm_1 = [ADMM_GAB_H_norm_1]
+        ADMM_GAB_H_norm_1 = [ADMM_GAB_H_norm_1],
+        ADMM_GAB_time = [ADMM_GAB_time]
     )
 
     append!(df, result)
