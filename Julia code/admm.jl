@@ -42,22 +42,32 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
         # Updates Zk
         Z = V2' * J * U1
         V2ZU1T = V2 * Z * U1'
+        H = V1DinvU1T + V2ZU1T
         # Updates Y
-        Y = V1DinvU1T + V2ZU1T + Lambda
+        # Y = H + Lambda
         # Updates Ek
-        Ek = soft_thresholding_matrix(Y, 1/rho)
+        # Ek = soft_thresholding_matrix(Y, 1/rho)
+        Ek = soft_thresholding_matrix(H + Lambda, 1/rho)
+        res_infeas = H - Ek
         # Updates Lambdak
-        Lambda = Lambda + V1DinvU1T + V2ZU1T - Ek
+        # Lambda = Lambda + V1DinvU1T + V2ZU1T - Ek
+        Lambda += res_infeas
         # Calculates stop criterion variables
-        rk = V1DinvU1T + V2ZU1T - Ek
-        sk = rho * V2' * (Ek - Ekm) * U1
+        # rk = V1DinvU1T + V2ZU1T - Ek
+        # sk = rho * V2' * (Ek - Ekm) * U1
+        rk_F = norm(res_infeas)
+        sk_F = rho * norm(V2' * (Ek - Ekm) * U1)
         matrix_norms = [norm(Ek), norm(V2ZU1T), V1DinvU1T_F]
         primal_upper_bound = eps_abs * sqrt(m*n) + eps_rel * maximum(matrix_norms)
-        aux_var = norm(V2' * Lambda * U1)
-        dual_upper_bound = eps_abs * sqrt((n-r)*r) + eps_rel * rho * aux_var
+        # aux_var = norm(V2' * Lambda * U1)
+        # dual_upper_bound = eps_abs * sqrt((n-r)*r) + eps_rel * rho * aux_var
+        dual_upper_bound = eps_abs * sqrt((n-r)*r) + eps_rel * rho * norm(V2' * Lambda * U1)
         # Checks stop criterion
-        if (norm(rk) <= primal_upper_bound) && (norm(sk) <= dual_upper_bound)
-            H = V1DinvU1T + V2ZU1T
+        # if (norm(rk) <= primal_upper_bound) && (norm(sk) <= dual_upper_bound)
+        #     H = V1DinvU1T + V2ZU1T
+        #     break
+        # end
+        if (rk_F <= primal_upper_bound) && (sk_F <= dual_upper_bound)
             break
         end
         # Makes Ek the new Ek-1
