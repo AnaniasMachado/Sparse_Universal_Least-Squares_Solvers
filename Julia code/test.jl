@@ -51,16 +51,16 @@ iter = 5000000
 
 rho = 4.0
 epsilon = 10^(-8)
+fixed_tol = false
 time_limit = 2*60*60
 
 ADMM_time = @elapsed begin
-    ADMM_H = admm_p123(A, rho, epsilon, epsilon, time_limit)
+    ADMM_H = admm_p123(A, rho, epsilon, epsilon, fixed_tol, time_limit)
 end
 ADMM_H_norm_0 = matrix_norm_0(ADMM_H)
 ADMM_H_norm_1 = norm(ADMM_H, 1)
 
 eps_opt = 10^(-8)
-fixed_tol = false
 
 ADMM_GAB_time = @elapsed begin
     ADMM_GAB_H = run_admm_p123(A, m, n, r, rho, epsilon, epsilon, eps_opt, fixed_tol)

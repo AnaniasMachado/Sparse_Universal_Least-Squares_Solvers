@@ -18,7 +18,7 @@ function variables_initialization(V1::Matrix{Float64}, U1::Matrix{Float64}, D_in
     return Lambda, E
 end
 
-function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::Float64, fixed_tol::Float64, time_limit::Int64)
+function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::Float64, fixed_tol::Bool, time_limit::Int64)
     m, n = size(A)
     U, S, V = svd(A)
     S = Diagonal(S)
