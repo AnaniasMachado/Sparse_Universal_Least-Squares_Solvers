@@ -1,4 +1,5 @@
 using LinearAlgebra
+using SparseArrays
 
 epsilon = 10^(-5)
 
@@ -37,7 +38,10 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
     V1DinvU1T_F = norm(V1DinvU1T)
     Z = zeros(n - r, r)
     H = zeros(n, m)
+    H = sparse(H)
     Lambda, Ekm = variables_initialization(V1, U1, D_inv, rho)
+    Ekm = sparse(Ekm)
+    Ek = Ekm
     start_time = time()
     while true
         # Updates J
