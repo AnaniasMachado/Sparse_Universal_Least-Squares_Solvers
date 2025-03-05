@@ -14,8 +14,10 @@ def problem_1_norm_P1_solver(A):
     model = gp.Model("lp")
 
     # Creates variables
-    H_var = model.addVars(n, m, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS, name="H")
-    Z_var = model.addVars(n, m, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS, name="Z")
+    # H_var = model.addVars(n, m, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS, name="H")
+    # Z_var = model.addVars(n, m, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS, name="Z")
+    H_var = model.addVars(n, m, vtype=GRB.CONTINUOUS, name="H")
+    Z_var = model.addVars(n, m, vtype=GRB.CONTINUOUS, name="Z")
     H = []
     Z = []
     for i in range(n):
@@ -30,7 +32,8 @@ def problem_1_norm_P1_solver(A):
     Z = np.array(Z)
 
     # Defines objective function
-    objective = np.trace(np.dot(J.T, Z))
+    # objective = np.trace(np.dot(J.T, Z))
+    objective = sum(Z[i, j] for i in range(n) for j in range(m))
 
     # Sets objective function
     model.setObjective(objective, GRB.MINIMIZE)
@@ -54,7 +57,7 @@ def problem_1_norm_P1_solver(A):
             model.addConstr(Z_plus_H[i, j] >= 0, name=f"constraint_ineq_2_i={i}_j={j}")
 
     # Configures log to not show messages on terminal
-    model.setParam("OutputFlag", 0)
+    # model.setParam("OutputFlag", 0)
 
     # Defines SoftMemLimit (in GigaBytes)
     # model.setParam('SoftMemLimit', 8)
@@ -944,8 +947,10 @@ def problem_1_norm_P1_sym_solver(A):
     model = gp.Model("lp")
 
     # Creates variables
-    H_var = model.addVars(n, m, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS, name="H")
-    Z_var = model.addVars(n, m, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS, name="Z")
+    # H_var = model.addVars(n, m, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS, name="H")
+    # Z_var = model.addVars(n, m, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS, name="Z")
+    H_var = model.addVars(n, m, vtype=GRB.CONTINUOUS, name="H")
+    Z_var = model.addVars(n, m, vtype=GRB.CONTINUOUS, name="Z")
     H = []
     Z = []
     for i in range(n):
@@ -960,7 +965,8 @@ def problem_1_norm_P1_sym_solver(A):
     Z = np.array(Z)
 
     # Defines objective function
-    objective = np.trace(np.dot(J.T, Z))
+    # objective = np.trace(np.dot(J.T, Z))
+    objective = sum(Z[i, j] for i in range(n) for j in range(m))
 
     # Sets objective function
     model.setObjective(objective, GRB.MINIMIZE)
