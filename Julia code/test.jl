@@ -56,7 +56,7 @@ for mat_file in mat_files
 
     rho = 4.0
     epsilon = 10^(-5)
-    fixed_tol = false
+    fixed_tol = true
     time_limit = 2*60*60
 
     ADMM_time = @elapsed begin

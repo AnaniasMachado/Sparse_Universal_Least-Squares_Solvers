@@ -18,7 +18,7 @@ function variables_initialization(V1::Matrix{Float64}, U1::Matrix{Float64}, D_in
     return Lambda, E
 end
 
-function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::Float64, fixed_tol::Bool, time_limit::Int64)
+function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::Float64, fixed_tol::Bool, eps_opt::Float64, time_limit::Int64)
     m, n = size(A)
     U, S, V = svd(A)
     S = Diagonal(S)
@@ -71,23 +71,29 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
         # sk = rho * V2' * (Ek - Ekm) * U1
         rk_F = norm(res_infeas)
         sk_F = rho * norm(V2' * (Ek - Ekm) * U1)
-        matrix_norms = [norm(Ek), norm(V2ZU1T), V1DinvU1T_F]
-        primal_upper_bound = eps_abs * sqrt(m*n) + eps_rel * maximum(matrix_norms)
-        # aux_var = norm(V2' * Lambda * U1)
-        # dual_upper_bound = eps_abs * sqrt((n-r)*r) + eps_rel * rho * aux_var
-        dual_upper_bound = eps_abs * sqrt((n-r)*r) + eps_rel * rho * norm(V2' * Lambda * U1)
-        # Checks stop criterion
-        # if (norm(rk) <= primal_upper_bound) && (norm(sk) <= dual_upper_bound)
-        #     H = V1DinvU1T + V2ZU1T
-        #     break
-        # end
         if k % 100 == 0
             println("ADMM iteration: $k")
             println("ADMM primal residual: $rk_F)")
             println("ADMM dual residual: $sk_F)")
         end
-        if (rk_F <= primal_upper_bound) && (sk_F <= dual_upper_bound)
-            break
+        if !fixed_tol
+            matrix_norms = [norm(Ek), norm(V2ZU1T), V1DinvU1T_F]
+            primal_upper_bound = eps_abs * sqrt(m*n) + eps_rel * maximum(matrix_norms)
+            # aux_var = norm(V2' * Lambda * U1)
+            # dual_upper_bound = eps_abs * sqrt((n-r)*r) + eps_rel * rho * aux_var
+            dual_upper_bound = eps_abs * sqrt((n-r)*r) + eps_rel * rho * norm(V2' * Lambda * U1)
+            # Checks stop criterion
+            # if (norm(rk) <= primal_upper_bound) && (norm(sk) <= dual_upper_bound)
+            #     H = V1DinvU1T + V2ZU1T
+            #     break
+            # end
+            if (rk_F <= primal_upper_bound) && (sk_F <= dual_upper_bound)
+                break
+            end
+        else
+            if (rk_F <= eps_opt) && (sk_F <= eps_opt)
+                break
+            end
         end
         # Makes Ek the new Ek-1
         Ekm = Ek
