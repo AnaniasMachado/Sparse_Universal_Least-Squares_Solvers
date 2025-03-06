@@ -31,13 +31,18 @@ function add_constraint_PMX(inst::GurobiInst, data::DataInst)
     )
 end
 
+function add_constraint_Sym(inst::GurobiInst, data::DataInst)
+    @constraint(inst.model, inst.H .== inst.H', base_name = "Sym_")
+end
+
 constraints_dict = Dict(
     "P1" => add_constraint_P1,
     "P3" => add_constraint_P3,
     "P4" => add_constraint_P4,
     "PLS" => add_constraint_PLS,
     "PMN" => add_constraint_PMN,
-    "PMX" => add_constraint_PMX
+    "PMX" => add_constraint_PMX,
+    "Sym" => add_constraint_Sym
 )
 
 function add_constraints(inst::GurobiInst, data::DataInst, constraints::Vector{String})
@@ -63,7 +68,7 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
     @constraint(inst.model, Z - H .>= null_matrix, base_name = "Z_minus_H_")
     @constraint(inst.model, Z + H .>= null_matrix, base_name = "Z_plus_H_")
 
-    set_optimizer_attributes(model, "OptimalityTol" => 10^(-8))
+    set_optimizer_attributes(model, "OptimalityTol" => opt_tol)
 
     optimize!(model)
 
