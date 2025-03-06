@@ -118,10 +118,10 @@ for mat_file in mat_files
 end
 
 if method == "Gurobi"
-    CSV.write("results_GRB.csv", df)
+    CSV.write("results_$(exp)_GRB.csv", df)
 elseif method == "LS"
-    CSV.write("results_LS.csv", df)
+    CSV.write("results_$(exp)_LS.csv", df)
 elseif method == "ADMM"
-    CSV.write("results_ADMM.csv", df)
+    CSV.write("results_$(exp)_ADMM.csv", df)
 else
     throw(ErrorException("Invalid method chose."))
