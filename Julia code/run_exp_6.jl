@@ -1,5 +1,7 @@
 using CSV
 using DataFrames
+using MAT
+using Base.GC
 
 include("types.jl")
 include("utility.jl")
@@ -11,8 +13,13 @@ exp = "6"
 matrices_folder = "./Experiment_Matrices/Experiment_" * exp
 mat_files = readdir(matrices_folder)
 
+results_folder = "results/Experiment_$exp"
+
 methods = ["Gurobi", "LS", "ADMM"]
-method = [0]
+method = methods[1]
+
+# Gurobi parameters
+opt_tol = 10^(-5)
 
 # ADMM parameters
 rho = 3.0
@@ -20,14 +27,16 @@ epsilon = 10^(-5)
 eps_abs = epsilon
 eps_rel = epsilon
 fixed_tol = true
-eps_opt = 10^(-5)
+eps_opt = epsilon
 time_limit = 2*60*60
 
 df = DataFrame()
 
-for mat_file in mat_files
-    mat_path = joinpath(matrix_folder, mat_file)
+for mat_file in mat_files[8:9]
+    mat_path = joinpath(matrices_folder, mat_file)
     mat_data = matread(mat_path)
+
+    println("Solving for matrix: $mat_path")
     
     A = mat_data["matrix"]
     A = Matrix(A)
@@ -50,19 +59,19 @@ for mat_file in mat_files
     AMP_norm_1 = norm(AMP, 1)
 
     if method == "Gurobi"
-        data = DataInst(A, m, n, r)
+        hatA = A' * A
+        hatm, hatn = size(hatA)
+        data = DataInst(hatA, hatm, hatn, r)
 
         constraints = ["P1"]
-        opt_tol = 10^(-8)
 
-        GRB_P1_time = @elapsed begin
-            GRB_P1_H = gurobi_solver(data, constraints, opt_tol)
-        end
-        GRB_P1_H_norm_0 = matrix_norm_0(GRB_P1_H)
-        GRB_P1_H_norm_1 = norm(GRB_P1_H, 1)
+        # GRB_P1_time = @elapsed begin
+        #     GRB_P1_H = gurobi_solver(data, constraints, opt_tol)
+        # end
+        # GRB_P1_H_norm_0 = matrix_norm_0(GRB_P1_H)
+        # GRB_P1_H_norm_1 = norm(GRB_P1_H, 1)
 
         constraints = ["P1", "Sym"]
-        opt_tol = 10^(-8)
 
         GRB_P1_Sym_time = @elapsed begin
             GRB_P1_Sym_H = gurobi_solver(data, constraints, opt_tol)
@@ -88,6 +97,8 @@ for mat_file in mat_files
         )
 
         append!(df, result)
+
+        GC.gc()
     elseif method == "LS"
         println("0")
     elseif method == "ADMM"
@@ -112,16 +123,31 @@ for mat_file in mat_files
         )
 
         append!(df, result)
+
+        GC.gc()
     else
         throw(ErrorException("Invalid method chose."))
     end
 end
 
 if method == "Gurobi"
-    CSV.write("results_$(exp)_GRB.csv", df)
+    results_filename = "results_$(exp)_GRB.csv"
+    results_filepath = joinpath(results_folder, results_filename)
+    CSV.write(results_filepath, df)
 elseif method == "LS"
-    CSV.write("results_$(exp)_LS.csv", df)
+    results_filename = "results_$(exp)_LS.csv"
+    results_filepath = joinpath(results_folder, results_filename)
+    CSV.write(results_filepath, df)
 elseif method == "ADMM"
-    CSV.write("results_$(exp)_ADMM.csv", df)
+    if fixed_tol
+        results_filename = "results_$(exp)_ADMMe.csv"
+        results_filepath = joinpath(results_folder, results_filename)
+        CSV.write(results_filepath, df)
+    else
+        results_filename = "results_$(exp)_ADMM.csv"
+        results_filepath = joinpath(results_folder, results_filename)
+        CSV.write(results_filepath, df)
+    end
 else
     throw(ErrorException("Invalid method chose."))
+end

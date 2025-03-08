@@ -59,7 +59,7 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
     @variable(model, H[1:data.n, 1:data.m])
     @variable(model, Z[1:data.n, 1:data.m])
 
-    @objective(model, Min, sum(Z[i, j] for i in 1:n, j in 1:m))
+    @objective(model, Min, sum(Z[i, j] for i in 1:data.n, j in 1:data.m))
 
     inst = GurobiInst(model, H)
 
@@ -70,15 +70,15 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
 
     set_optimizer_attributes(model, "OptimalityTol" => opt_tol)
 
+    set_optimizer_attribute(model, "LogToConsole", 0)
+
     optimize!(model)
 
     status = termination_status(model)
     if status == MOI.OPTIMAL
-        println("Optimal solution found.")
         H_star = [value(H[i, j]) for i in 1:data.n, j in 1:data.m]
         return H_star
-        println("Optimal value z =", objective_value(model))
     else
-        println("Model was not optimized successfully.")
+        throw(ErrorException("Model was not optimized successfully. Status Code: $status"))
     end
 end
