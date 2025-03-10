@@ -5,6 +5,12 @@ using JuMP
 
 function add_constraint_P1(inst::GurobiInst, data::DataInst)
     @constraint(inst.model, data.A * inst.H * data.A .== data.A, base_name = "P1_")
+    # AHA = data.A * inst.H * data.A
+    # for j in 1:data.n
+    #     for i in 1:data.m
+    #         @constraint(inst.model, AHA[i, j] == data.A[i, j])
+    #     end
+    # end
 end
 
 function add_constraint_P3(inst::GurobiInst, data::DataInst)
@@ -33,6 +39,11 @@ end
 
 function add_constraint_Sym(inst::GurobiInst, data::DataInst)
     @constraint(inst.model, inst.H .== inst.H', base_name = "Sym_")
+    # for j in 1:size(inst.H, 2)
+    #     for i in 1:size(inst.H, 1)
+    #         @constraint(inst.model, inst.H[i, j] == inst.H[j, i])
+    #     end
+    # end
 end
 
 constraints_dict = Dict(
@@ -56,8 +67,8 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
 
     model = Model(Gurobi.Optimizer)
 
-    @variable(model, H[1:data.n, 1:data.m])
-    @variable(model, Z[1:data.n, 1:data.m])
+    @variable(model, H[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
+    @variable(model, Z[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
 
     @objective(model, Min, sum(Z[i, j] for i in 1:data.n, j in 1:data.m))
 
@@ -68,13 +79,16 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
     @constraint(inst.model, Z - H .>= null_matrix, base_name = "Z_minus_H_")
     @constraint(inst.model, Z + H .>= null_matrix, base_name = "Z_plus_H_")
 
-    set_optimizer_attributes(model, "OptimalityTol" => opt_tol)
+    set_optimizer_attributes(inst.model, "OptimalityTol" => opt_tol)
 
-    set_optimizer_attribute(model, "LogToConsole", 0)
+    set_optimizer_attribute(inst.model, "TimeLimit", 7200)
+    # set_optimizer_attribute(inst.model, "TimeLimit", 600)
 
-    optimize!(model)
+    set_optimizer_attribute(inst.model, "LogToConsole", 0)
 
-    status = termination_status(model)
+    optimize!(inst.model)
+
+    status = termination_status(inst.model)
     if status == MOI.OPTIMAL
         H_star = [value(H[i, j]) for i in 1:data.n, j in 1:data.m]
         return H_star

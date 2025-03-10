@@ -32,7 +32,11 @@ time_limit = 2*60*60
 
 df = DataFrame()
 
-for mat_file in mat_files[8:9]
+# for mat_file in mat_files[8:9]
+# for mat_file in mat_files[18:19]
+# for mat_file in mat_files[31:end]
+# for mat_file in mat_files[52:end]
+for mat_file in mat_files
     mat_path = joinpath(matrices_folder, mat_file)
     mat_data = matread(mat_path)
 
@@ -65,11 +69,11 @@ for mat_file in mat_files[8:9]
 
         constraints = ["P1"]
 
-        # GRB_P1_time = @elapsed begin
-        #     GRB_P1_H = gurobi_solver(data, constraints, opt_tol)
-        # end
-        # GRB_P1_H_norm_0 = matrix_norm_0(GRB_P1_H)
-        # GRB_P1_H_norm_1 = norm(GRB_P1_H, 1)
+        GRB_P1_time = @elapsed begin
+            GRB_P1_H = gurobi_solver(data, constraints, opt_tol)
+        end
+        GRB_P1_H_norm_0 = matrix_norm_0(GRB_P1_H)
+        GRB_P1_H_norm_1 = norm(GRB_P1_H, 1)
 
         constraints = ["P1", "Sym"]
 
