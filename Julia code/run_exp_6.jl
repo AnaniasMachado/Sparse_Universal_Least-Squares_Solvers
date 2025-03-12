@@ -16,7 +16,7 @@ mat_files = readdir(matrices_folder)
 results_folder = "results/Experiment_$exp"
 
 methods = ["Gurobi", "LS", "ADMM"]
-method = methods[1]
+method = methods[3]
 
 # Gurobi parameters
 opt_tol = 10^(-5)
@@ -35,7 +35,7 @@ df = DataFrame()
 # for mat_file in mat_files[8:9]
 # for mat_file in mat_files[18:19]
 # for mat_file in mat_files[31:end]
-# for mat_file in mat_files[52:end]
+# for mat_file in mat_files[51:end]
 for mat_file in mat_files
     mat_path = joinpath(matrices_folder, mat_file)
     mat_data = matread(mat_path)

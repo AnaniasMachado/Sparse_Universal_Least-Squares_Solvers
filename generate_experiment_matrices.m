@@ -4,6 +4,11 @@ function generate_experiment_matrices(expn, m, n, r_values, d_values, n_mtx, out
         mkdir(output_dir);
     end
 
+    % seed = randi([1, 1000000]);
+    seed = 1;
+
+    rng(seed);
+
     % Iterates over all values of r and d
     for i = 1:length(r_values)
         for j = 1:length(d_values)

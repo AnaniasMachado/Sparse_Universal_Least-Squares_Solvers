@@ -4,10 +4,9 @@ function A = generate_experiment_matrix(m, n, r, density, M)
         M = 2;
     end
 
-    % seed = randi([1, 1000]);
-    seed = 5;
+    % seed = randi([1, 1000000]);
 
-    rng(seed);
+    % rng(seed);
 
     % Initializes vector rc
     rc = zeros(1, r);
