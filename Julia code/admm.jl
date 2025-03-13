@@ -51,11 +51,11 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
         # Calculates stop criterion variables
         rk_F = norm(res_infeas)
         sk_F = rho * norm(V2' * (Ek - Ekm) * U1)
-        if k % 100 == 0
-            println("ADMM iteration: $k")
-            println("ADMM primal residual: $rk_F)")
-            println("ADMM dual residual: $sk_F)")
-        end
+        # if k % 100 == 0
+        #     println("ADMM iteration: $k")
+        #     println("ADMM primal residual: $rk_F)")
+        #     println("ADMM dual residual: $sk_F)")
+        # end
         if !fixed_tol
             matrix_norms = [norm(Ek), norm(V2ZU1T), V1DinvU1T_F]
             primal_upper_bound = eps_abs * sqrt(m*n) + eps_rel * maximum(matrix_norms)

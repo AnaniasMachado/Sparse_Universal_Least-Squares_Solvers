@@ -233,12 +233,13 @@ end
 function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64)
     # Initial data
     m, n = size(A)
-    X = rand(n, m)
+    Xh = zeros(n, m)
     # V = rand(n, m)
     # V = pinv(A)
-    V = generalized_inverse(A)
+    # V = generalized_inverse(A)
     # Projection data
     proj_data = get_proj_data(A , problem)
+    V = proj_data.AMP
     k = 0
     while true
         k += 1
@@ -246,13 +247,13 @@ function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Floa
         Vh = 2 * Xh - V
         X = projection(A, Vh, proj_data, problem)
         # X = gurobi_projection(Vh, proj_data, problem)
-        if !is_feasible(A, X, proj_data, problem)
-            println("Infeasible X.")
-            throw(ErrorException("Infeasible X error."))
-            break
-        else
-            # println("Feasible X.")
-        end
+        # if !is_feasible(A, X, proj_data, problem)
+        #     println("Infeasible X.")
+        #     throw(ErrorException("Infeasible X error."))
+        #     break
+        # else
+        #     # println("Feasible X.")
+        # end
         V += X - Xh
         pri_res = primal_residual(A, Xh, proj_data, problem)
         dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
@@ -264,7 +265,7 @@ function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Floa
         # println("Primal residual: $pri_res")
         # println("Dual residual: $dual_res")
     end
-    return X
+    return Xh
 end
 
 function drs_fpi(A::Matrix{Float64}, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
