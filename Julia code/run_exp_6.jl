@@ -15,8 +15,8 @@ mat_files = readdir(matrices_folder)
 
 results_folder = "results/Experiment_$exp"
 
-methods = ["Gurobi", "LS", "ADMM"]
-method = methods[3]
+methods = ["Gurobi", "LS", "ADMM", "hatAMP_data"]
+method = methods[4]
 
 # Gurobi parameters
 opt_tol = 10^(-5)
@@ -129,6 +129,19 @@ for mat_file in mat_files
         append!(df, result)
 
         GC.gc()
+    elseif method == "hatAMP_data"
+        hatA = A' * A
+        hatAMP = pinv(hatA)
+
+        hatAMP_norm_0 = matrix_norm_0(hatAMP)
+        hatAMP_norm1 = norm(hatAMP, 1)
+
+        result = DataFrame(
+            hatAMP_norm_0 = hatAMP_norm_0,
+            hatAMP_norm1 = hatAMP_norm1
+        )
+
+        append!(df, result)
     else
         throw(ErrorException("Invalid method chose."))
     end
@@ -152,6 +165,10 @@ elseif method == "ADMM"
         results_filepath = joinpath(results_folder, results_filename)
         CSV.write(results_filepath, df)
     end
+elseif method == "hatAMP_data"
+        results_filename = "results_$(exp)_hatAMP.csv"
+        results_filepath = joinpath(results_folder, results_filename)
+        CSV.write(results_filepath, df)
 else
     throw(ErrorException("Invalid method chose."))
 end
