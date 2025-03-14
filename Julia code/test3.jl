@@ -34,12 +34,13 @@ for mat_file in mat_files
     AMP_norm_0 = matrix_norm_0(AMP)
     AMP_norm_1 = norm(AMP, 1)
 
+    lambda = 10^(-2)
     problem = "P123"
     eps_opt = 10^(-5)
-    lambda = 10^(-2)
+    fixed_tol = false
 
     DRS_time = @elapsed begin
-        DRS_H = drs(A, lambda, problem, eps_opt)
+        DRS_H = drs(A, lambda, problem, eps_opt, fixed_tol)
     end
     DRS_H_norm_0 = matrix_norm_0(DRS_H)
     DRS_H_norm_1 = norm(DRS_H, 1)
@@ -62,4 +63,4 @@ for mat_file in mat_files
     GC.gc()
 end
 
-CSV.write("results_drs.csv", df)
+CSV.write("results_drs_fixed_tol.csv", df)
