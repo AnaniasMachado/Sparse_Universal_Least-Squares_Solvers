@@ -45,6 +45,14 @@ for mat_file in mat_files
     DRS_H_norm_0 = matrix_norm_0(DRS_H)
     DRS_H_norm_1 = norm(DRS_H, 1)
 
+    if problem == "P123"
+        println("PLS violation: $(norm(A' * A * DRS_H - A'))")
+        println("P123 violation: $(norm(DRS_H * A * pinv(A) - DRS_H))")
+        if (norm(A' * A * DRS_H - A') > 10^(-5)) || (norm(DRS_H * A * pinv(A) - DRS_H) > 10^(-5))
+            throw(ErrorException("Failed Infeasibility Check."))
+        end
+    end
+
     result = DataFrame(
         m = [m],
         n = [n],
