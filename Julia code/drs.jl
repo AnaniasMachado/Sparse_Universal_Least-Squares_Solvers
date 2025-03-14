@@ -230,7 +230,16 @@ function is_feasible(A::Matrix{Float64}, X::Matrix{Float64}, proj_data::Union{DR
     end
 end
 
-function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64)
+function compute_primal_upper_bound(A::Matrix{Float64}, X::Matrix{Float64}, problem::String, proj_data::Union{DRSProjDataSimple, DRSProjDataP123})
+    if problem == "P123"
+        itemA = norm(A' * X' * A')
+        itemB = norm(X * A * proj_data.AMP)
+        itemC = norm(X)
+        return maximum([itemA, itemB, itemC])
+    end
+end
+
+function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64, fixed_tol::Bool)
     # Initial data
     m, n = size(A)
     Xh = zeros(n, m)
@@ -239,6 +248,10 @@ function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Floa
     # V = generalized_inverse(A)
     # Projection data
     proj_data = get_proj_data(A , problem)
+    c = 0
+    if problem == "P123"
+        c = norm(A.T)
+    end
     V = proj_data.AMP
     k = 0
     while true
@@ -257,9 +270,17 @@ function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Floa
         V += X - Xh
         pri_res = primal_residual(A, Xh, proj_data, problem)
         dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
-        if (pri_res <= eps_opt) && (dual_res <= eps_opt)
-            println("DRS Convergence: k=$k")
-            break
+        if !fixed_tol
+            pri_ub = sqrt(m * n) * eps_opt + eps_opt * primal_upper_bound(A, X, problem, proj_data)
+            if (pri_res <= pri_ub) && (dual_res <= eps_opt)
+                println("DRS Convergence: k=$k")
+                break
+            end
+        else
+            if (pri_res <= eps_opt) && (dual_res <= eps_opt)
+                println("DRS Convergence: k=$k")
+                break
+            end
         end
         # println("Iteration k: $k")
         # println("Primal residual: $pri_res")
