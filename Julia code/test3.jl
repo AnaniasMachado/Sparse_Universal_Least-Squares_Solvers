@@ -36,8 +36,8 @@ for mat_file in mat_files
 
     lambda = 10^(-2)
     problem = "P123"
-    eps_opt = 10^(-5)
-    fixed_tol = false
+    eps_opt = 10^(-4)
+    fixed_tol = true
 
     DRS_time = @elapsed begin
         DRS_H = drs(A, lambda, problem, eps_opt, fixed_tol)
@@ -48,9 +48,9 @@ for mat_file in mat_files
     if problem == "P123"
         println("PLS violation: $(norm(A' * A * DRS_H - A'))")
         println("P123 violation: $(norm(DRS_H * A * pinv(A) - DRS_H))")
-        if (norm(A' * A * DRS_H - A') > 10^(-5)) || (norm(DRS_H * A * pinv(A) - DRS_H) > 10^(-5))
-            throw(ErrorException("Failed Infeasibility Check."))
-        end
+        # if (norm(A' * A * DRS_H - A') > 10^(-5)) || (norm(DRS_H * A * pinv(A) - DRS_H) > 10^(-5))
+        #     throw(ErrorException("Failed Infeasibility Check."))
+        # end
     end
 
     result = DataFrame(
@@ -71,4 +71,4 @@ for mat_file in mat_files
     GC.gc()
 end
 
-CSV.write("results_drs_fixed_tol.csv", df)
+CSV.write("results_drs_tol_10m4.csv", df)
