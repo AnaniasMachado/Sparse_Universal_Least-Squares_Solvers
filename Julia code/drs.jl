@@ -283,58 +283,15 @@ function drs_fpi(A::Matrix{Float64}, proj_data::Union{DRSProjDataSimple, DRSProj
     return fpi
 end
 
-function a2drs_tr(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64)
-    # Initial data
+function drs_tr_fpi(A::Matrix{Float64}, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
     m, n = size(A)
-    X = rand(n, m)
-    # V = rand(n, m)
-    # V = generalized_inverse(A)
-    V = pinv(A)
-    # Projection data
-    # println("Point 0")
-    proj_data = get_proj_data(A , problem)
-    # println("Point 1")
-    # Anderson acceleration data
-    fpi = drs_fpi(A, proj_data, problem)
-    mu = 1.0
-    p1 = 0.01
-    p2 = 0.25
-    eta1 = 2.0
-    eta2 = 0.25
-    gamma = 10^(-4)
-    c = 1.0
-    M = 3
-    list_V = []
-    res_f = []
-    k = 0
-    while true
-        k += 1
+    function tr_fpi(V::Vector{Float64}, lambda::Float64)
+        V = reshape(V, n, m)
         Xh = soft_thresholding_matrix(V, lambda)
-        # Xh = anderson_acceleration_tr(V, lambda, fpi, mu, p1, p2, eta1, eta2, gamma, c, M, list_V, res_f, eps_opt)
-        # Xh = anderson_acceleration_tr(V, lambda, soft_thresholding_matrix, mu, p1, p2, eta1, eta2, gamma, c, M, list_V, res_f, eps_opt)
-        # println("Point 2")
         Vh = 2 * Xh - V
         X = projection(A, Vh, proj_data, problem)
-        # X = gurobi_projection(Vh, proj_data, problem)
-        if !is_feasible(A, X, proj_data, problem)
-            println("Infeasible X.")
-            throw(ErrorException("Infeasible X error."))
-            break
-        end
-        # println("Point 3")
-        # V += X - Xh
-        V = anderson_acceleration_tr(V, lambda, fpi, mu, p1, p2, eta1, eta2, gamma, c, M, list_V, res_f, eps_opt)
-        pri_res = primal_residual(A, Xh, proj_data, problem)
-        # println("Point 4")
-        dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
-        # println("Point 5")
-        if (pri_res <= eps_opt) && (dual_res <= eps_opt)
-            println("DRS TR Convergence: k=$k")
-            break
-        end
-        # println("Iteration TR k: $k")
-        # println("Primal residual: $pri_res")
-        # println("Dual residual: $dual_res")
+        V += X - Xh
+        return vec(V)
     end
-    return X
+    return tr_fpi
 end
