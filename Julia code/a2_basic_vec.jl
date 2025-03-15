@@ -70,7 +70,7 @@ function a2drs_basic(A::Matrix{Float64}, lambda::Float64, problem::String, eps_o
     # Vk = rand(n, m)
     # Vk = zeros(n, m)
     # Vk = generalized_inverse(A)
-    Vk = pinv(A)
+    Vk = proj_data.AMP
     V = fpi(Vk, lambda)
     gk = vec(Vk - V)
     g = rand(n * m)

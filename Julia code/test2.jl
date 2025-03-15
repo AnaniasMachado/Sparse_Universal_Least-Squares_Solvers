@@ -4,7 +4,7 @@ include("utility.jl")
 include("types.jl")
 include("solvers.jl")
 include("drs.jl")
-include("a2_boyd.jl")
+include("a2_boyd_vec.jl")
 include("a2_basic_vec.jl")
 include("admm.jl")
 
@@ -78,11 +78,11 @@ end
 # A2DRS_H_norm_0 = matrix_norm_0(A2DRS_H)
 # A2DRS_H_norm_1 = norm(A2DRS_H, 1)
 
-# A2DRS_Boyd_time = @elapsed begin
-#     A2DRS_Boyd_H = a2drs_boyd(A, lambda, problem, eps_opt)
-# end
-# A2DRS_Boyd_H_norm_0 = matrix_norm_0(A2DRS_Boyd_H)
-# A2DRS_Boyd_H_norm_1 = norm(A2DRS_Boyd_H, 1)
+A2DRS_Boyd_time = @elapsed begin
+    A2DRS_Boyd_H, A2DRS_Boyd_k = a2drs_boyd(A, lambda, problem, eps_opt)
+end
+A2DRS_Boyd_H_norm_0 = matrix_norm_0(A2DRS_Boyd_H)
+A2DRS_Boyd_H_norm_1 = norm(A2DRS_Boyd_H, 1)
 
 # A2DRS_ATM_time = @elapsed begin
 #     A2DRS_ATM_H = a2drs_atm(A, lambda, problem, eps_opt)
@@ -153,8 +153,9 @@ println("DRS norm 1: $DRS_H_norm_1")
 # println("A2DRS_TR time: $A2DRS_time")
 # println("A2DRS_TR norm 1: $A2DRS_H_norm_1")
 
-# println("A2DRS_Boyd time: $A2DRS_Boyd_time")
-# println("A2DRS_Boyd norm 1: $A2DRS_Boyd_H_norm_1")
+println("A2DRS_Boyd time: $A2DRS_Boyd_time")
+println("A2DRS_Boyd k: $A2DRS_Boyd_k")
+println("A2DRS_Boyd norm 1: $A2DRS_Boyd_H_norm_1")
 
 # println("A2DRS_ATM time: $A2DRS_ATM_time")
 # println("A2DRS_ATM norm 1: $A2DRS_ATM_H_norm_1")

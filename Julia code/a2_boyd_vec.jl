@@ -1,4 +1,4 @@
-# function compute_gamma(g::Vector{Float64}, F_matrix::Matrix{Float64})
+# function compute_gamma(g::Vector{Float64}, F_matrix::Matrix{Float64}, S_matrix::Matrix{Float64})
 #     m, n = size(F_matrix)
 #     eta = 10^(-8)
 
@@ -8,7 +8,7 @@
 
 #     FT = g - F_matrix * gamma
 #     FT_F = sum((FT[i])^2 for i in 1:m)
-#     ST = eta * sum((gamma[i])^2 for i in 1:n)
+#     ST = eta * (norm(F_matrix)^2 + norm(S_matrix)^2) * sum((gamma[i])^2 for i in 1:n)
 #     @objective(model, Min, FT_F + ST)
 
 #     set_optimizer_attribute(model, "LogToConsole", 0)
@@ -27,7 +27,7 @@
 
 function compute_gamma(g::Vector{Float64}, F_matrix::Matrix{Float64}, S_matrix::Matrix{Float64})
     m, n = size(F_matrix)
-    eta = 10^(-2)
+    eta = 10^(-8)
 
     A = eta * (norm(F_matrix)^2 + norm(S_matrix)^2) * I(n) + F_matrix' * F_matrix
     b = F_matrix' * g
@@ -71,14 +71,13 @@ function a2drs_boyd(A::Matrix{Float64}, lambda::Float64, problem::String, eps_op
     # Vk = rand(n, m)
     # Vk = zeros(n, m)
     # Vk = generalized_inverse(A)
-    Vkm = pinv(A)
+    Vkm = proj_data.AMP
     Vk = fpi(Vkm, lambda)
-    V = rand(n, m)
+    Vkp = zeros(n, m)
     gkm = vec(Vkm - Vk)
     g0_F = norm(gkm)
     gk = rand(n * m)
     g = rand(n * m)
-    Vk = V
     # Safeguard constants and variables
     D = 10^6
     R = 10
@@ -89,8 +88,8 @@ function a2drs_boyd(A::Matrix{Float64}, lambda::Float64, problem::String, eps_op
     while true
         k += 1
         # Usual DRS steps
-        Xh = soft_thresholding_matrix(V, lambda)
-        Vh = 2 * Xh - V
+        Xh = soft_thresholding_matrix(Vk, lambda)
+        Vh = 2 * Xh - Vk
         X = projection(A, Vh, proj_data, problem)
         # X = gurobi_projection(Vh, proj_data, problem)
         # if !is_feasible(A, X, proj_data, problem)
@@ -100,23 +99,23 @@ function a2drs_boyd(A::Matrix{Float64}, lambda::Float64, problem::String, eps_op
         # else
         #     # println("Feasible X.")
         # end
-        V += X - Xh
+        Vkp = Vk + X - Xh
         pri_res = primal_residual(A, Xh, proj_data, problem)
-        dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
+        dual_res = dual_residual(A, Xh, Vkp, lambda, proj_data, problem)
         if (pri_res <= eps_opt) && (dual_res <= eps_opt)
-            println("DRS Basic SG Convergence: k=$k")
+            println("A2DRS Boyd Convergence: k=$k")
             break
         end
-        println("Iteration Basic SG k: $k")
-        println("Primal Basic SG residual: $pri_res")
-        println("Dual Basic SG residual: $dual_res")
+        println("Iteration Boyd k: $k")
+        println("Primal Boyd residual: $pri_res")
+        println("Dual Boyd residual: $dual_res")
         # Anderson acceleration steps
         ## Memory update
         M = min(k, M_max)
-        V_DRS = vec(V)
+        V_DRS = vec(Vkp)
         g = vec(Vk) - V_DRS
         f = vec(g - gk)
-        s = V - Vkm
+        s = vec(Vk - Vkm)
         F_matrix = hcat(F_matrix, f)
         V_matrix = hcat(V_matrix, V_DRS)
         S_matrix = hcat(S_matrix, s)
@@ -125,52 +124,32 @@ function a2drs_boyd(A::Matrix{Float64}, lambda::Float64, problem::String, eps_op
             V_matrix = V_matrix[:, 2:end]
             S_matrix = S_matrix[:, 2:end]
         end
-        if k == M_max
-            ## AA candidate
-            gamma = compute_gamma(g, F_matrix, S_matrix)
-            alpha = compute_alpha(gamma)
-            V_AA = compute_V_AA(V_matrix, alpha)
-            V_AA = reshape(V_AA, n, m)
-            ## Swaping
-            Vkm = Vk
-            Vk = V
-            gkm = gk
-            gk = g
-            V = V_AA
-        elseif M == M_max
-            ## AA candidate
-            gamma = compute_gamma(g, F_matrix)
-            alpha = compute_alpha(gamma)
-            V_AA = compute_V_AA(V_matrix, alpha)
-            V_AA = reshape(V_AA, n, m)
-            ## Safeguard
-            if I_sg || (R_AA >= R)
-                if norm(gk) <= D * g0_F * (n_AA / (R + 1))^(-(1 + eps_opt))
-                    V = V_AA
-                    n_AA += 1
-                    I_sg = false
-                    R_AA = 1
-                else
-                    V = V_DRS
-                    R_AA = 0
-                end
-            else
-                V = V_AA
+        ## AA candidate
+        gamma = compute_gamma(g, F_matrix)
+        alpha = compute_alpha(gamma)
+        V_AA = compute_V_AA(V_matrix, alpha)
+        V_AA = reshape(V_AA, n, m)
+        ## Safeguard
+        if I_sg || (R_AA >= R)
+            if norm(gk) <= D * g0_F * (n_AA / (R + 1))^(-(1 + eps_opt))
+                Vkp = V_AA
                 n_AA += 1
-                R_AA += 1
+                I_sg = false
+                R_AA = 1
+            else
+                Vkp = V_DRS
+                R_AA = 0
             end
-            ## Swaping
-            Vkm = Vk
-            Vk = V
-            gkm = gk
-            gk = g
         else
-            ## Swaping
-            Vkm = Vk
-            Vk = V
-            gkm = gk
-            gk = g
+            Vkp = V_AA
+            n_AA += 1
+            R_AA += 1
         end
+        ## Swaping
+        Vkm = Vk
+        Vk = Vkp
+        gkm = gk
+        gk = g
     end
     return Xh, k
 end
