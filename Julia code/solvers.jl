@@ -52,13 +52,14 @@ constraints_dict = Dict(
     "P4" => add_constraint_P4,
     "PLS" => add_constraint_PLS,
     "PMN" => add_constraint_PMN,
-    "PMX" => add_constraint_PMX,
-    "Sym" => add_constraint_Sym
+    "PMX" => add_constraint_PMX
 )
 
 function add_constraints(inst::GurobiInst, data::DataInst, constraints::Vector{String})
     for constraint in constraints
-        constraints_dict[constraint](inst, data)
+        if constraint != "Sym"
+            constraints_dict[constraint](inst, data)
+        end
     end
 end
 
@@ -67,7 +68,13 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
 
     model = Model(Gurobi.Optimizer)
 
-    @variable(model, H[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
+    if "Sym" in constraints
+        @variable(model, H[1:data.n, 1:data.m], Symmetric, lower_bound=-Inf, upper_bound=Inf)
+    else
+        @variable(model, H[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
+    end
+
+    # @variable(model, H[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
     @variable(model, Z[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
 
     @objective(model, Min, sum(Z[i, j] for i in 1:data.n, j in 1:data.m))
@@ -84,9 +91,9 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
     # set_optimizer_attribute(inst.model, "TimeLimit", 7200)
     set_optimizer_attribute(inst.model, "TimeLimit", 600)
 
-    # set_optimizer_attribute(inst.model, "LogToConsole", 0)
+    set_optimizer_attribute(inst.model, "LogToConsole", 0)
 
-    set_optimizer_attribute(inst.model, "LogFile", "gurobi_log.txt")
+    # set_optimizer_attribute(inst.model, "LogFile", "gurobi_log.txt")
 
     optimize!(inst.model)
 

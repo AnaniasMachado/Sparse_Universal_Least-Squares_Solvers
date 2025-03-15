@@ -148,7 +148,8 @@ function primal_residual(A::Matrix, V::Matrix, proj_data::Union{DRSProjDataSimpl
     elseif problem == "PLS"
         return norm(A' * A * V - A')
     elseif problem == "P123"
-        return norm(A' * A * V - A') + norm(V * A * proj_data.AMP - V)
+        # return norm(A' * A * V - A') + norm(V * A * proj_data.AMP - V)
+        return norm(A' * V' * A' + V * A * proj_data.AMP - A' - V)
     end
 end
 
@@ -230,16 +231,7 @@ function is_feasible(A::Matrix{Float64}, X::Matrix{Float64}, proj_data::Union{DR
     end
 end
 
-function compute_primal_upper_bound(A::Matrix{Float64}, X::Matrix{Float64}, c_F::Float64, problem::String, proj_data::Union{DRSProjDataSimple, DRSProjDataP123})
-    if problem == "P123"
-        itemA = norm(A' * X' * A')
-        itemB = norm(X * A * proj_data.AMP)
-        itemC = norm(X)
-        return maximum([itemA, itemB, itemC])
-    end
-end
-
-function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64, fixed_tol::Bool)
+function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64)
     # Initial data
     m, n = size(A)
     Xh = zeros(n, m)
@@ -270,23 +262,15 @@ function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Floa
         V += X - Xh
         pri_res = primal_residual(A, Xh, proj_data, problem)
         dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
-        if !fixed_tol
-            pri_ub = sqrt(m * n) * eps_opt + eps_opt * compute_primal_upper_bound(A, X, c_F, problem, proj_data)
-            if (pri_res <= pri_ub) && (dual_res <= eps_opt)
-                println("DRS Convergence: k=$k")
-                break
-            end
-        else
-            if (pri_res <= eps_opt) && (dual_res <= eps_opt)
-                println("DRS Convergence: k=$k")
-                break
-            end
+        if (pri_res <= eps_opt) && (dual_res <= eps_opt)
+            println("DRS Convergence: k=$k")
+            break
         end
         # println("Iteration k: $k")
         # println("Primal residual: $pri_res")
         # println("Dual residual: $dual_res")
     end
-    return Xh
+    return Xh, k
 end
 
 function drs_fpi(A::Matrix{Float64}, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
