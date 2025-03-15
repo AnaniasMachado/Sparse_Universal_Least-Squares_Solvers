@@ -25,11 +25,11 @@
 #     end
 # end
 
-function compute_gamma(g::Vector{Float64}, F_matrix::Matrix{Float64})
+function compute_gamma(g::Vector{Float64}, F_matrix::Matrix{Float64}, S_matrix::Matrix{Float64})
     m, n = size(F_matrix)
     eta = 10^(-2)
 
-    A = eta * I(n) + F_matrix' * F_matrix
+    A = eta * (norm(F_matrix)^2 + norm(S_matrix)^2) * I(n) + F_matrix' * F_matrix
     b = F_matrix' * g
     return A \ b
 end
@@ -53,7 +53,7 @@ function compute_V_AA(V_matrix::Matrix{Float64}, alpha::Vector{Float64})
     return V_matrix * alpha
 end
 
-function a2drs_basic(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64)
+function a2drs_boyd(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64)
     # Initial data
     m, n = size(A)
     Xh = rand(n, m)
@@ -67,94 +67,7 @@ function a2drs_basic(A::Matrix{Float64}, lambda::Float64, problem::String, eps_o
     M_max = 10
     F_matrix = Matrix{Float64}(undef, m * n, 0)
     V_matrix = Matrix{Float64}(undef, m * n, 0)
-    # Vk = rand(n, m)
-    # Vk = zeros(n, m)
-    # Vk = generalized_inverse(A)
-    Vk = pinv(A)
-    V = fpi(Vk, lambda)
-    gk = vec(Vk - V)
-    g = rand(n * m)
-    Vk = V
-    k = 0
-    while true
-        k += 1
-        # Usual DRS steps
-        Xh = soft_thresholding_matrix(V, lambda)
-        Vh = 2 * Xh - V
-        X = projection(A, Vh, proj_data, problem)
-        # X = gurobi_projection(Vh, proj_data, problem)
-        if !is_feasible(A, X, proj_data, problem)
-            println("Infeasible X.")
-            throw(ErrorException("Infeasible X error."))
-            break
-        else
-            # println("Feasible X.")
-        end
-        V += X - Xh
-        pri_res = primal_residual(A, Xh, proj_data, problem)
-        dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
-        if (pri_res <= eps_opt) && (dual_res <= eps_opt)
-            println("DRS Basic Convergence: k=$k")
-            break
-        end
-        println("Iteration Basic k: $k")
-        println("Primal Basic residual: $pri_res")
-        println("Dual Basic residual: $dual_res")
-        # Anderson acceleration steps
-        ## Memory update
-        M = min(k, M_max)
-        V_DRS = vec(V)
-        g = vec(Vk) - V_DRS
-        f = g - gk
-        F_matrix = hcat(F_matrix, f)
-        V_matrix = hcat(V_matrix, V_DRS)
-        if size(F_matrix)[2] > M
-            F_matrix = F_matrix[:, 2:end]
-            V_matrix = V_matrix[:, 2:end]
-        end
-        if k == M_max
-            ## AA candidate
-            gamma = compute_gamma(g, F_matrix)
-            alpha = compute_alpha(gamma)
-            V_AA = compute_V_AA(V_matrix, alpha)
-            V_AA = reshape(V_AA, n, m)
-            ## Swaping
-            Vk = V
-            gk = g
-            V = V_AA
-        elseif M == M_max
-            ## AA candidate
-            gamma = compute_gamma(g, F_matrix)
-            alpha = compute_alpha(gamma)
-            V_AA = compute_V_AA(V_matrix, alpha)
-            V_AA = reshape(V_AA, n, m)
-            ## Swaping
-            Vk = V
-            gk = g
-            V = V_AA
-        else
-            ## Swaping
-            Vk = V
-            gk = g
-        end
-    end
-    return Xh, k
-end
-
-function a2drs_basic_sg(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64)
-    # Initial data
-    m, n = size(A)
-    Xh = rand(n, m)
-    # V = rand(n, m)
-    # V = pinv(A)
-    # V = generalized_inverse(A)
-    # Projection data
-    proj_data = get_proj_data(A , problem)
-    # Anderson acceleration data
-    fpi = drs_fpi(A, proj_data, problem)
-    M_max = 5
-    F_matrix = Matrix{Float64}(undef, m * n, 0)
-    V_matrix = Matrix{Float64}(undef, m * n, 0)
+    S_matrix = Matrix{Float64}(undef, m * n, 0)
     # Vk = rand(n, m)
     # Vk = zeros(n, m)
     # Vk = generalized_inverse(A)
@@ -203,15 +116,18 @@ function a2drs_basic_sg(A::Matrix{Float64}, lambda::Float64, problem::String, ep
         V_DRS = vec(V)
         g = vec(Vk) - V_DRS
         f = vec(g - gk)
+        s = V - Vkm
         F_matrix = hcat(F_matrix, f)
         V_matrix = hcat(V_matrix, V_DRS)
+        S_matrix = hcat(S_matrix, s)
         if size(F_matrix)[2] > M
             F_matrix = F_matrix[:, 2:end]
             V_matrix = V_matrix[:, 2:end]
+            S_matrix = S_matrix[:, 2:end]
         end
         if k == M_max
             ## AA candidate
-            gamma = compute_gamma(g, F_matrix)
+            gamma = compute_gamma(g, F_matrix, S_matrix)
             alpha = compute_alpha(gamma)
             V_AA = compute_V_AA(V_matrix, alpha)
             V_AA = reshape(V_AA, n, m)
