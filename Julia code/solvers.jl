@@ -84,7 +84,9 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
     # set_optimizer_attribute(inst.model, "TimeLimit", 7200)
     set_optimizer_attribute(inst.model, "TimeLimit", 600)
 
-    set_optimizer_attribute(inst.model, "LogToConsole", 0)
+    # set_optimizer_attribute(inst.model, "LogToConsole", 0)
+
+    set_optimizer_attribute(inst.model, "LogFile", "gurobi_log.txt")
 
     optimize!(inst.model)
 

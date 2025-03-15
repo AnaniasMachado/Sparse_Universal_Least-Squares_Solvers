@@ -2,7 +2,6 @@ using MAT
 using Base.GC
 
 include("types.jl")
-include("utility.jl")
 include("solvers.jl")
 
 mat_filepath = "experiment_6_matrix_m200_n100_r25_d10_idx7.mat"
@@ -30,8 +29,6 @@ opt_tol = 10^(-5)
 GRB_P1_time = @elapsed begin
     GRB_P1_H = gurobi_solver(data, constraints, opt_tol)
 end
-GRB_P1_H_norm_0 = matrix_norm_0(GRB_P1_H)
-GRB_P1_H_norm_1 = norm(GRB_P1_H, 1)
 
 GC.gc()
 
@@ -40,5 +37,3 @@ constraints = ["P1", "Sym"]
 GRB_P1_Sym_time = @elapsed begin
     GRB_P1_Sym_H = gurobi_solver(data, constraints, opt_tol)
 end
-GRB_P1_Sym_H_norm_0 = matrix_norm_0(GRB_P1_Sym_H)
-GRB_P1_Sym_H_norm_1 = norm(GRB_P1_Sym_H, 1)
