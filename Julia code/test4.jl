@@ -9,6 +9,7 @@ include("solvers.jl")
 include("drs.jl")
 include("a2_basic_vec.jl")
 include("a2_boyd_vec.jl")
+include("a2_tr_vec.jl")
 include("admm.jl")
 
 matrix_folder = "./Experiment_Matrices/Testing_ADMM_P123_N1"
@@ -49,6 +50,14 @@ for mat_file in mat_files
 
     GC.gc()
 
+    A2DRS_Basic_time = @elapsed begin
+        A2DRS_Basic_H, A2DRS_Basic_k = a2drs_basic(A, lambda, problem, eps_opt)
+    end
+    A2DRS_Basic_H_norm_0 = matrix_norm_0(A2DRS_Basic_H)
+    A2DRS_Basic_H_norm_1 = norm(A2DRS_Basic_H, 1)
+
+    GC.gc()
+
     A2DRS_Boyd_time = @elapsed begin
         A2DRS_Boyd_H, A2DRS_Boyd_k = a2drs_boyd(A, lambda, problem, eps_opt)
     end
@@ -57,11 +66,13 @@ for mat_file in mat_files
 
     GC.gc()
 
-    A2DRS_Basic_time = @elapsed begin
-        A2DRS_Basic_H, A2DRS_Basic_k = a2drs_basic(A, lambda, problem, eps_opt)
+    A2DRS_TR_time = @elapsed begin
+        A2DRS_TR_H, A2DRS_TR_k = a2drs_tr(A, lambda, problem, eps_opt)
     end
-    A2DRS_Basic_H_norm_0 = matrix_norm_0(A2DRS_Basic_H)
-    A2DRS_Basic_H_norm_1 = norm(A2DRS_Basic_H, 1)
+    A2DRS_TR_H_norm_0 = matrix_norm_0(A2DRS_TR_H)
+    A2DRS_TR_H_norm_1 = norm(A2DRS_TR_H, 1)
+
+    GC.gc()
 
     result = DataFrame(
         m = [m],
@@ -75,14 +86,18 @@ for mat_file in mat_files
         DRS_H_norm_1 = [DRS_H_norm_1],
         DRS_time = [DRS_time],
         DRS_k = [DRS_k],
+        A2DRS_Basic_H_norm_0 = [A2DRS_Basic_H_norm_0],
+        A2DRS_Basic_H_norm_1 = [A2DRS_Basic_H_norm_1],
+        A2DRS_Basic_time = [A2DRS_Basic_time],
+        A2DRS_Basic_k = [A2DRS_Basic_k],
         A2DRS_Boyd_H_norm_0 = [A2DRS_Boyd_H_norm_0],
         A2DRS_Boyd_H_norm_1 = [A2DRS_Boyd_H_norm_1],
         A2DRS_Boyd_time = [A2DRS_Boyd_time],
         A2DRS_Boyd_k = [A2DRS_Boyd_k],
-        A2DRS_Basic_H_norm_0 = [A2DRS_Basic_H_norm_0],
-        A2DRS_Basic_H_norm_1 = [A2DRS_Basic_H_norm_1],
-        A2DRS_Basic_time = [A2DRS_Basic_time],
-        A2DRS_Basic_k = [A2DRS_Basic_k]
+        A2DRS_TR_H_norm_0 = [A2DRS_TR_H_norm_0],
+        A2DRS_TR_H_norm_1 = [A2DRS_TR_H_norm_1],
+        A2DRS_TR_time = [A2DRS_TR_time],
+        A2DRS_TR_k = [A2DRS_TR_k],
     )
 
     append!(df, result)

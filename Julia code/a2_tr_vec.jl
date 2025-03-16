@@ -135,11 +135,11 @@ function a2drs_tr(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt:
     # Anderson acceleration data
     fpi = drs_tr_fpi(A, proj_data, problem)
     mu = 1.0
-    # p1 = 0.01
-    p1 = 10^(-2)
+    p1 = 0.01
+    # p1 = 10^(-2)
     p2 = 0.25
-    # eta1 = 2.0
-    eta1 = 1.05
+    eta1 = 2.0
+    # eta1 = 1.05
     eta2 = 0.25
     gamma = 10^(-4)
     c = 1.0
@@ -154,11 +154,11 @@ function a2drs_tr(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt:
         Vh = 2 * Xh - V
         X = projection(A, Vh, proj_data, problem)
         # X = gurobi_projection(Vh, proj_data, problem)
-        if !is_feasible(A, X, proj_data, problem)
-            println("Infeasible X.")
-            throw(ErrorException("Infeasible X error."))
-            break
-        end
+        # if !is_feasible(A, X, proj_data, problem)
+        #     println("Infeasible X.")
+        #     throw(ErrorException("Infeasible X error."))
+        #     break
+        # end
         V += X - Xh
         pri_res = primal_residual(A, Xh, proj_data, problem)
         dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
@@ -178,13 +178,13 @@ function a2drs_tr(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt:
             V_matrix = V_matrix[:, 2:end]
         end
         k0 = get_k0(F_matrix)
-        # t = mu * (norm(F_matrix[:, k0])^2)
-        t = (norm(F_matrix[:, k0])^2) * 10^(-3)
+        t = mu * (norm(F_matrix[:, k0])^2)
+        # t = (norm(F_matrix[:, k0])^2) * 10^(-3)
         alpha = compute_alpha(t, k0, F_matrix)
         rho = compute_rho(lambda, fpi, alpha, c, gamma, k0, V_matrix, F_matrix)
-        # mu = update_mu(mu, p1, p2, eta1, eta2, rho)
+        mu = update_mu(mu, p1, p2, eta1, eta2, rho)
         if rho > p1
-            ghat = compute_ghat(alpha, k0, list_V)
+            ghat = compute_ghat(alpha, k0, V_matrix)
             V = reshape(ghat, n, m)
             Vk = V
         else

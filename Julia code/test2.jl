@@ -73,17 +73,17 @@ elseif problem == "P123"
     end
 end
 
-# A2DRS_TR_time = @elapsed begin
-#     A2DRS_TR_H, A2DRS_TR_k = a2drs_tr(A, lambda, problem, eps_opt)
-# end
-# A2DRS_TR_H_norm_0 = matrix_norm_0(A2DRS_TR_H)
-# A2DRS_TR_H_norm_1 = norm(A2DRS_TR_H, 1)
-
-A2DRS_Boyd_time = @elapsed begin
-    A2DRS_Boyd_H, A2DRS_Boyd_k = a2drs_boyd(A, lambda, problem, eps_opt)
+A2DRS_TR_time = @elapsed begin
+    A2DRS_TR_H, A2DRS_TR_k = a2drs_tr(A, lambda, problem, eps_opt)
 end
-A2DRS_Boyd_H_norm_0 = matrix_norm_0(A2DRS_Boyd_H)
-A2DRS_Boyd_H_norm_1 = norm(A2DRS_Boyd_H, 1)
+A2DRS_TR_H_norm_0 = matrix_norm_0(A2DRS_TR_H)
+A2DRS_TR_H_norm_1 = norm(A2DRS_TR_H, 1)
+
+# A2DRS_Boyd_time = @elapsed begin
+#     A2DRS_Boyd_H, A2DRS_Boyd_k = a2drs_boyd(A, lambda, problem, eps_opt)
+# end
+# A2DRS_Boyd_H_norm_0 = matrix_norm_0(A2DRS_Boyd_H)
+# A2DRS_Boyd_H_norm_1 = norm(A2DRS_Boyd_H, 1)
 
 # A2DRS_ATM_time = @elapsed begin
 #     A2DRS_ATM_H = a2drs_atm(A, lambda, problem, eps_opt)
@@ -151,13 +151,13 @@ println("DRS time: $DRS_time")
 println("DRS k: $DRS_k")
 println("DRS norm 1: $DRS_H_norm_1")
 
-# println("A2DRS_TR time: $A2DRS_TR_time")
-# println("A2DRS_TR k: $A2DRS_TR_k")
-# println("A2DRS_TR norm 1: $A2DRS_TR_H_norm_1")
+println("A2DRS_TR time: $A2DRS_TR_time")
+println("A2DRS_TR k: $A2DRS_TR_k")
+println("A2DRS_TR norm 1: $A2DRS_TR_H_norm_1")
 
-println("A2DRS_Boyd time: $A2DRS_Boyd_time")
-println("A2DRS_Boyd k: $A2DRS_Boyd_k")
-println("A2DRS_Boyd norm 1: $A2DRS_Boyd_H_norm_1")
+# println("A2DRS_Boyd time: $A2DRS_Boyd_time")
+# println("A2DRS_Boyd k: $A2DRS_Boyd_k")
+# println("A2DRS_Boyd norm 1: $A2DRS_Boyd_H_norm_1")
 
 # println("A2DRS_ATM time: $A2DRS_ATM_time")
 # println("A2DRS_ATM norm 1: $A2DRS_ATM_H_norm_1")
