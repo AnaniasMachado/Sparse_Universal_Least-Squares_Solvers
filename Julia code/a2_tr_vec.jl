@@ -87,12 +87,13 @@ function compute_ared(lambda::Float64, fpi::Function, alpha::Vector{Float64}, ga
 end
 
 function compute_pred(alpha::Vector{Float64}, c::Float64, gamma::Float64, k0::Int64, F_matrix::Matrix{Float64})
-    r = compute_r(gamma, k0, res_f)
-    fhat = res_f[k0]
-    idx_list = [i for i in 1:size(res_f)[1] if i != k0]
-    p = size(res_f)[1] - 1
+    m, n = size(F_matrix)
+    idx_list = [i for i in 1:n if i != k0]
+    p = n - 1
+    r = compute_r(gamma, k0, F_matrix)
+    fhat = F_matrix[:, k0]
     for i in 1:p
-        fhat += alpha[i] * (res_f[idx_list[i]] - res_f[k0])
+        fhat += alpha[i] * (F_matrix[:, idx_list[i]] - F_matrix[:, k0])
     end
     return r - c * norm(fhat)
 end
@@ -134,15 +135,17 @@ function a2drs_tr(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt:
     # Anderson acceleration data
     fpi = drs_tr_fpi(A, proj_data, problem)
     mu = 1.0
-    p1 = 0.01
+    # p1 = 0.01
+    p1 = 10^(-2)
     p2 = 0.25
-    eta1 = 2.0
+    # eta1 = 2.0
+    eta1 = 1.05
     eta2 = 0.25
     gamma = 10^(-4)
     c = 1.0
-    M = 3
-    V_matrix = []
-    F_matrix = []
+    M = 5
+    F_matrix = Matrix{Float64}(undef, m * n, 0)
+    V_matrix = Matrix{Float64}(undef, m * n, 0)
     k = 0
     while true
         k += 1
@@ -163,9 +166,9 @@ function a2drs_tr(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt:
             println("DRS TR Convergence: k=$k")
             break
         end
-        # println("Iteration TR k: $k")
-        # println("Primal residual: $pri_res")
-        # println("Dual residual: $dual_res")
+        println("Iteration TR k: $k")
+        println("Primal TR residual: $pri_res")
+        println("Dual TR residual: $dual_res")
         # Anderson acceleration
         f = vec(V - Vk)
         F_matrix = hcat(F_matrix, f)
@@ -175,16 +178,20 @@ function a2drs_tr(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt:
             V_matrix = V_matrix[:, 2:end]
         end
         k0 = get_k0(F_matrix)
-        t = mu * (norm(F_matrix[:, k0])^2)
+        # t = mu * (norm(F_matrix[:, k0])^2)
+        t = (norm(F_matrix[:, k0])^2) * 10^(-3)
         alpha = compute_alpha(t, k0, F_matrix)
         rho = compute_rho(lambda, fpi, alpha, c, gamma, k0, V_matrix, F_matrix)
-        mu = update_mu(mu, p1, p2, eta1, eta2, rho)
+        # mu = update_mu(mu, p1, p2, eta1, eta2, rho)
         if rho > p1
             ghat = compute_ghat(alpha, k0, list_V)
             V = reshape(ghat, n, m)
         else
-            V = reshape(V_matrix[:, k0], n, m)
+            V = reshape(fpi(V_matrix[:, k0], lambda), n, m)
         end
+        # println("Current t: $t")
+        # println("Current mu: $mu")
+        # println("Current Fk0_F: $(norm(F_matrix[:, k0]))")
     end
     return Xh, k
 end

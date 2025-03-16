@@ -7,6 +7,7 @@ include("types.jl")
 include("utility.jl")
 include("solvers.jl")
 include("drs.jl")
+include("a2_basic_vec.jl")
 include("admm.jl")
 
 matrix_folder = "./Experiment_Matrices/Testing_ADMM_P123_N1"
@@ -36,11 +37,14 @@ for mat_file in mat_files
 
     lambda = 10^(-2)
     problem = "P123"
-    eps_opt = 10^(-4)
+    eps_opt = 10^(-5)
     fixed_tol = true
 
+    # DRS_time = @elapsed begin
+    #     DRS_H = drs(A, lambda, problem, eps_opt, fixed_tol)
+    # end
     DRS_time = @elapsed begin
-        DRS_H = drs(A, lambda, problem, eps_opt, fixed_tol)
+        DRS_H, k = a2drs_basic(A, lambda, problem, eps_opt)
     end
     DRS_H_norm_0 = matrix_norm_0(DRS_H)
     DRS_H_norm_1 = norm(DRS_H, 1)
@@ -71,4 +75,4 @@ for mat_file in mat_files
     GC.gc()
 end
 
-CSV.write("results_drs_tol_10m4.csv", df)
+CSV.write("results_a2drs_basic.csv", df)

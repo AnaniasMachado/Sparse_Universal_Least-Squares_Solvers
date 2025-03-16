@@ -4,6 +4,7 @@ include("utility.jl")
 include("types.jl")
 include("solvers.jl")
 include("drs.jl")
+include("a2_tr_vec.jl")
 include("a2_boyd_vec.jl")
 include("a2_basic_vec.jl")
 include("admm.jl")
@@ -48,11 +49,11 @@ lambda = 10^(-2)
 # lambda = e-3; time = 51,1s; quality = slightly better than optimal
 # lambda = e-2; time = 47,2s; quality = slightly better than optimal
 
-GRB_time = @elapsed begin
-    GRB_H = gurobi_solver(data, constraints, eps_opt)
-end
-GRB_H_norm_0 = matrix_norm_0(GRB_H)
-GRB_H_norm_1 = norm(GRB_H, 1)
+# GRB_time = @elapsed begin
+#     GRB_H = gurobi_solver(data, constraints, eps_opt)
+# end
+# GRB_H_norm_0 = matrix_norm_0(GRB_H)
+# GRB_H_norm_1 = norm(GRB_H, 1)
 
 DRS_time = @elapsed begin
     DRS_H, DRS_k = drs(A, lambda, problem, eps_opt)
@@ -72,11 +73,11 @@ elseif problem == "P123"
     end
 end
 
-# A2DRS_time = @elapsed begin
-#     A2DRS_H = a2drs_tr(A, lambda, problem, eps_opt)
+# A2DRS_TR_time = @elapsed begin
+#     A2DRS_TR_H, A2DRS_TR_k = a2drs_tr(A, lambda, problem, eps_opt)
 # end
-# A2DRS_H_norm_0 = matrix_norm_0(A2DRS_H)
-# A2DRS_H_norm_1 = norm(A2DRS_H, 1)
+# A2DRS_TR_H_norm_0 = matrix_norm_0(A2DRS_TR_H)
+# A2DRS_TR_H_norm_1 = norm(A2DRS_TR_H, 1)
 
 A2DRS_Boyd_time = @elapsed begin
     A2DRS_Boyd_H, A2DRS_Boyd_k = a2drs_boyd(A, lambda, problem, eps_opt)
@@ -143,15 +144,16 @@ if problem == "P123"
     end
 end
 
-println("GRB time: $GRB_time")
-println("GRB norm 1: $GRB_H_norm_1")
+# println("GRB time: $GRB_time")
+# println("GRB norm 1: $GRB_H_norm_1")
 
 println("DRS time: $DRS_time")
 println("DRS k: $DRS_k")
 println("DRS norm 1: $DRS_H_norm_1")
 
-# println("A2DRS_TR time: $A2DRS_time")
-# println("A2DRS_TR norm 1: $A2DRS_H_norm_1")
+# println("A2DRS_TR time: $A2DRS_TR_time")
+# println("A2DRS_TR k: $A2DRS_TR_k")
+# println("A2DRS_TR norm 1: $A2DRS_TR_H_norm_1")
 
 println("A2DRS_Boyd time: $A2DRS_Boyd_time")
 println("A2DRS_Boyd k: $A2DRS_Boyd_k")
