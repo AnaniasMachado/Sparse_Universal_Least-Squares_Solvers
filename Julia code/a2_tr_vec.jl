@@ -186,8 +186,10 @@ function a2drs_tr(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt:
         if rho > p1
             ghat = compute_ghat(alpha, k0, list_V)
             V = reshape(ghat, n, m)
+            Vk = V
         else
             V = reshape(fpi(V_matrix[:, k0], lambda), n, m)
+            Vk = V
         end
         # println("Current t: $t")
         # println("Current mu: $mu")
