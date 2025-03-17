@@ -27,27 +27,13 @@ using LinearAlgebra
 #     end
 # end
 
-# function compute_gamma(g::Vector{Float64}, F_matrix::Matrix{Float64})
-#     m, n = size(F_matrix)
-#     eta = 10^(-2)
-
-#     A = eta * I(n) + F_matrix' * F_matrix
-#     b = F_matrix' * g
-#     return A \ b
-# end
-
 function compute_gamma(g::Vector{Float64}, F_matrix::Matrix{Float64})
     m, n = size(F_matrix)
     eta = 10^(-2)
-    
-    U, S, V = svd(A)
-    S = Diagonal(S)
 
-    A = (S' * S + eta * I(n))
-    b = S' * U' * g
-    y = A \ b
-    x = V * y
-    return x
+    A = eta * I(n) + F_matrix' * F_matrix
+    b = F_matrix' * g
+    return A \ b
 end
 
 function compute_alpha(gamma::Vector{Float64})
