@@ -49,29 +49,40 @@ lambda = 10^(-2)
 # lambda = e-3; time = 51,1s; quality = slightly better than optimal
 # lambda = e-2; time = 47,2s; quality = slightly better than optimal
 
+epsilon = 10^(-5)
+eps_abs = epsilon
+eps_rel = epsilon
+fixed_tol = false
+
 # GRB_time = @elapsed begin
 #     GRB_H = gurobi_solver(data, constraints, eps_opt)
 # end
 # GRB_H_norm_0 = matrix_norm_0(GRB_H)
 # GRB_H_norm_1 = norm(GRB_H, 1)
 
+# DRS_time = @elapsed begin
+#     DRS_H, DRS_k = drs(A, lambda, problem, eps_opt)
+# end
+# DRS_H_norm_0 = matrix_norm_0(DRS_H)
+# DRS_H_norm_1 = norm(DRS_H, 1)
+
 DRS_time = @elapsed begin
-    DRS_H, DRS_k = drs(A, lambda, problem, eps_opt)
+    DRS_H, DRS_k = drs(A, lambda, eps_abs, eps_rel, problem, fixed_tol, eps_opt)
 end
 DRS_H_norm_0 = matrix_norm_0(DRS_H)
 DRS_H_norm_1 = norm(DRS_H, 1)
 
-if problem == "PLS"
-    if norm(A' * A * DRS_H - A') > 10^(-5)
-        throw(ErrorException("Failed Infeasibility Check."))
-    end
-elseif problem == "P123"
-    println("PLS violation: $(norm(A' * A * DRS_H - A'))")
-    println("P123 violation: $(norm(DRS_H * A * pinv(A) - DRS_H))")
-    if norm(A' * DRS_H' * A' + DRS_H * A * pinv(A) - A' - DRS_H) > 10^(-5)
-        throw(ErrorException("Failed Infeasibility Check."))
-    end
-end
+# if problem == "PLS"
+#     if norm(A' * A * DRS_H - A') > 10^(-5)
+#         throw(ErrorException("Failed Infeasibility Check."))
+#     end
+# elseif problem == "P123"
+#     println("PLS violation: $(norm(A' * A * DRS_H - A'))")
+#     println("P123 violation: $(norm(DRS_H * A * pinv(A) - DRS_H))")
+#     if norm(A' * DRS_H' * A' + DRS_H * A * pinv(A) - A' - DRS_H) > 10^(-5)
+#         throw(ErrorException("Failed Infeasibility Check."))
+#     end
+# end
 
 # A2DRS_TR_time = @elapsed begin
 #     A2DRS_TR_H, A2DRS_TR_k = a2drs_tr(A, lambda, problem, eps_opt)

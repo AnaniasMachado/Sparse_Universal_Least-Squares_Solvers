@@ -16,7 +16,7 @@ mat_files = readdir(matrices_folder)
 results_folder = "results/Experiment_$exp"
 
 methods = ["Gurobi", "LS", "ADMM", "hatAMP_data"]
-method = methods[4]
+method = methods[3]
 
 # Gurobi parameters
 opt_tol = 10^(-5)
@@ -26,7 +26,7 @@ rho = 3.0
 epsilon = 10^(-5)
 eps_abs = epsilon
 eps_rel = epsilon
-fixed_tol = true
+fixed_tol = false
 eps_opt = epsilon
 time_limit = 2*60*60
 
@@ -36,7 +36,8 @@ df = DataFrame()
 # for mat_file in mat_files[18:19]
 # for mat_file in mat_files[31:end]
 # for mat_file in mat_files[51:end]
-for mat_file in mat_files
+for mat_file in mat_files[1:2]
+# for mat_file in mat_files
     mat_path = joinpath(matrices_folder, mat_file)
     mat_data = matread(mat_path)
 
@@ -74,6 +75,7 @@ for mat_file in mat_files
         end
         GRB_P1_H_norm_0 = matrix_norm_0(GRB_P1_H)
         GRB_P1_H_norm_1 = norm(GRB_P1_H, 1)
+        matwrite("$(mat_file)_GRB_$(constraints[1]).mat", Dict("H" => GRB_P1_H))
 
         constraints = ["P1", "Sym"]
 
@@ -82,6 +84,7 @@ for mat_file in mat_files
         end
         GRB_P1_Sym_H_norm_0 = matrix_norm_0(GRB_P1_Sym_H)
         GRB_P1_Sym_H_norm_1 = norm(GRB_P1_Sym_H, 1)
+        matwrite("$(mat_file)_GRB_$(constraints[1])_$(constraints[2]).mat", Dict("H" => GRB_P1_Sym_H))
 
         result = DataFrame(
             m = [m],
@@ -111,6 +114,11 @@ for mat_file in mat_files
         end
         ADMM_H_norm_0 = matrix_norm_0(ADMM_H)
         ADMM_H_norm_1 = norm(ADMM_H, 1)
+        if fixed_tol
+            matwrite("$(mat_file)_ADMMe.mat", Dict("H" => ADMM_H))
+        else
+            matwrite("$(mat_file)_ADMM.mat", Dict("H" => ADMM_H))
+        end
 
         result = DataFrame(
             m = [m],
@@ -147,28 +155,28 @@ for mat_file in mat_files
     end
 end
 
-if method == "Gurobi"
-    results_filename = "results_$(exp)_GRB.csv"
-    results_filepath = joinpath(results_folder, results_filename)
-    CSV.write(results_filepath, df)
-elseif method == "LS"
-    results_filename = "results_$(exp)_LS.csv"
-    results_filepath = joinpath(results_folder, results_filename)
-    CSV.write(results_filepath, df)
-elseif method == "ADMM"
-    if fixed_tol
-        results_filename = "results_$(exp)_ADMMe.csv"
-        results_filepath = joinpath(results_folder, results_filename)
-        CSV.write(results_filepath, df)
-    else
-        results_filename = "results_$(exp)_ADMM.csv"
-        results_filepath = joinpath(results_folder, results_filename)
-        CSV.write(results_filepath, df)
-    end
-elseif method == "hatAMP_data"
-        results_filename = "results_$(exp)_hatAMP.csv"
-        results_filepath = joinpath(results_folder, results_filename)
-        CSV.write(results_filepath, df)
-else
-    throw(ErrorException("Invalid method chose."))
-end
+# if method == "Gurobi"
+#     results_filename = "results_$(exp)_GRB.csv"
+#     results_filepath = joinpath(results_folder, results_filename)
+#     CSV.write(results_filepath, df)
+# elseif method == "LS"
+#     results_filename = "results_$(exp)_LS.csv"
+#     results_filepath = joinpath(results_folder, results_filename)
+#     CSV.write(results_filepath, df)
+# elseif method == "ADMM"
+#     if fixed_tol
+#         results_filename = "results_$(exp)_ADMMe.csv"
+#         results_filepath = joinpath(results_folder, results_filename)
+#         CSV.write(results_filepath, df)
+#     else
+#         results_filename = "results_$(exp)_ADMM.csv"
+#         results_filepath = joinpath(results_folder, results_filename)
+#         CSV.write(results_filepath, df)
+#     end
+# elseif method == "hatAMP_data"
+#         results_filename = "results_$(exp)_hatAMP.csv"
+#         results_filepath = joinpath(results_folder, results_filename)
+#         CSV.write(results_filepath, df)
+# else
+#     throw(ErrorException("Invalid method chose."))
+# end
