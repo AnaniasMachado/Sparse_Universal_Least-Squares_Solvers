@@ -153,6 +153,17 @@ function primal_residual(A::Matrix, V::Matrix, proj_data::Union{DRSProjDataSimpl
     end
 end
 
+function primal_residual_matrix(A::Matrix, V::Matrix, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
+    if problem == "P1"
+        return norm(A * V * A - A)
+    elseif problem == "PLS"
+        return norm(A' * A * V - A')
+    elseif problem == "P123"
+        # return norm(A' * A * V - A') + norm(V * A * proj_data.AMP - V)
+        return A' * V' * A' + V * A * proj_data.AMP - A' - V
+    end
+end
+
 function dual_variable(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64}, lambda::Float64, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
     if problem == "P123"
         # m, n = size(A)
@@ -219,6 +230,16 @@ function dual_residual(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64
     end
 end
 
+function dual_residual_matrix(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64}, lambda::Float64, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
+    if problem == "P123"
+        Lambda, Gamma = dual_variable(A, X, V, lambda, proj_data, problem)
+        return (1 / lambda) * (V - X) + A' * A * Lambda + Gamma * A * proj_data.AMP - Gamma
+    else
+        Lambda = dual_variable(A, X, V, lambda, proj_data, problem)
+        return norm((1 / lambda) * (V - X) + proj_data.R' * Lambda * proj_data.S')
+    end
+end
+
 function is_feasible(A::Matrix{Float64}, X::Matrix{Float64}, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
     if problem == "P1"
         return norm(A * X * A - A) < 10^(-5)
@@ -231,7 +252,49 @@ function is_feasible(A::Matrix{Float64}, X::Matrix{Float64}, proj_data::Union{DR
     end
 end
 
-function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64)
+# function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64)
+#     # Initial data
+#     m, n = size(A)
+#     Xh = zeros(n, m)
+#     # V = rand(n, m)
+#     # V = pinv(A)
+#     # V = generalized_inverse(A)
+#     # Projection data
+#     proj_data = get_proj_data(A , problem)
+#     c_F = 0.0
+#     if problem == "P123"
+#         c_F = norm(A')
+#     end
+#     V = proj_data.AMP
+#     k = 0
+#     while true
+#         k += 1
+#         Xh = soft_thresholding_matrix(V, lambda)
+#         Vh = 2 * Xh - V
+#         X = projection(A, Vh, proj_data, problem)
+#         # X = gurobi_projection(Vh, proj_data, problem)
+#         # if !is_feasible(A, X, proj_data, problem)
+#         #     println("Infeasible X.")
+#         #     throw(ErrorException("Infeasible X error."))
+#         #     break
+#         # else
+#         #     # println("Feasible X.")
+#         # end
+#         V += X - Xh
+#         pri_res = primal_residual(A, Xh, proj_data, problem)
+#         dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
+#         if (pri_res <= eps_opt) && (dual_res <= eps_opt)
+#             println("DRS Convergence: k=$k")
+#             break
+#         end
+#         # println("Iteration k: $k")
+#         # println("Primal residual: $pri_res")
+#         # println("Dual residual: $dual_res")
+#     end
+#     return Xh, k
+# end
+
+function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Float64, problem::String, fixed_tol::Bool, eps_opt::Float64)
     # Initial data
     m, n = size(A)
     Xh = zeros(n, m)
@@ -245,6 +308,10 @@ function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Floa
         c_F = norm(A')
     end
     V = proj_data.AMP
+    initial_pri_res = primal_residual_matrix(A, Xh, proj_data, problem)
+    initial_dual_res = dual_res = dual_residual_matrix(A, Xh, V, lambda, proj_data, problem)
+    r0 = norm(hcat(initial_pri_res, initial_dual_res))
+    eps_tol = eps_abs + eps_rel * r0
     k = 0
     while true
         k += 1
@@ -260,15 +327,25 @@ function drs(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Floa
         #     # println("Feasible X.")
         # end
         V += X - Xh
-        pri_res = primal_residual(A, Xh, proj_data, problem)
-        dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
-        if (pri_res <= eps_opt) && (dual_res <= eps_opt)
-            println("DRS Convergence: k=$k")
-            break
+        if fixed_tol
+            pri_res = primal_residual(A, Xh, proj_data, problem)
+            dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
+            if (pri_res <= eps_opt) && (dual_res <= eps_opt)
+                println("DRS Convergence: k=$k")
+                break
+            end
+            # println("Iteration k: $k")
+            # println("Primal residual: $pri_res")
+            # println("Dual residual: $dual_res")
+        else
+            pri_res = primal_residual_matrix(A, Xh, proj_data, problem)
+            dual_res = dual_residual_matrix(A, Xh, V, lambda, proj_data, problem)
+            res = hcat(pri_res, dual_res)
+            if norm(res) <= eps_tol
+                println("DRS Convergence: k=$k")
+                break
+            end
         end
-        # println("Iteration k: $k")
-        # println("Primal residual: $pri_res")
-        # println("Dual residual: $dual_res")
     end
     return Xh, k
 end
