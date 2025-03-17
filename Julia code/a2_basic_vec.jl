@@ -27,6 +27,25 @@ using LinearAlgebra
 #     end
 # end
 
+# function compute_initial_B(F_matrix::Matrix{Float64})
+#     m, n = size(F_matrix)
+#     eta = 10^(-2)
+#     B = eta * I(n) + F_matrix' * F_matrix
+#     return B
+# end
+
+# function update_B_F(kmod::Int64, F_matrix::Matrix{Float64}, f::Vector{Float64}, B::Matrix{Float64})
+#     m, n = size(F_matrix)
+#     u = f - F_matrix[:, kmod]
+#     v = zeros(n)
+#     v[kmod] = 1
+#     uvT = u * v'
+#     # B += F_matrix' * uvT + uvT' * F_matrix + u' * u * v * v'
+#     B += F_matrix' * u * v' + v * u' * F_matrix + u' * u * v * v'
+#     F_matrix[:, kmod] = f
+#     return B, F_matrix
+# end
+
 function compute_gamma(g::Vector{Float64}, F_matrix::Matrix{Float64})
     m, n = size(F_matrix)
     eta = 10^(-2)
@@ -36,16 +55,44 @@ function compute_gamma(g::Vector{Float64}, F_matrix::Matrix{Float64})
     return A \ b
 end
 
-function compute_alpha(gamma::Vector{Float64})
+# function compute_gamma(g::Vector{Float64}, F_matrix::Matrix{Float64}, B::Matrix{Float64})
+#     b = F_matrix' * g
+#     return B \ b
+# end
+
+# function compute_alpha(gamma::Vector{Float64})
+#     p = size(gamma)[1]
+#     alpha = zeros(p)
+#     for i in 1:p
+#         if i == 1
+#             alpha[i] = gamma[i]
+#         elseif (i > 1) && (i < p)
+#             alpha[i] = gamma[i] - gamma[i-1]
+#         else
+#             alpha[i] = 1 - gamma[i-1]
+#         end
+#     end
+#     return alpha
+# end
+
+function compute_alpha(gamma::Vector{Float64}, kmod::Int64)
     p = size(gamma)[1]
     alpha = zeros(p)
+    idx_list = []
+    for i in 0:p-1
+        j = ((kmod + i) % p) + 1
+        push!(idx_list, j)
+    end
     for i in 1:p
+        j = idx_list[i]
         if i == 1
-            alpha[i] = gamma[i]
-        elseif (i > 1) && (i < p)
-            alpha[i] = gamma[i] - gamma[i-1]
+            alpha[j] = gamma[j]
+        elseif i == p
+            jm = idx_list[i-1]
+            alpha[j] = 1 - gamma[jm]
         else
-            alpha[i] = 1 - gamma[i-1]
+            jm = idx_list[i-1]
+            alpha[j] = gamma[j] - gamma[jm]
         end
     end
     return alpha
@@ -173,13 +220,13 @@ function a2drs_basic(A::Matrix{Float64}, lambda::Float64, problem::String, eps_o
         Vh = 2 * Xh - V
         X = projection(A, Vh, proj_data, problem)
         # X = gurobi_projection(Vh, proj_data, problem)
-        if !is_feasible(A, X, proj_data, problem)
-            println("Infeasible X.")
-            throw(ErrorException("Infeasible X error."))
-            break
-        else
-            # println("Feasible X.")
-        end
+        # if !is_feasible(A, X, proj_data, problem)
+        #     println("Infeasible X.")
+        #     throw(ErrorException("Infeasible X error."))
+        #     break
+        # else
+        #     # println("Feasible X.")
+        # end
         V += X - Xh
         pri_res = primal_residual(A, Xh, proj_data, problem)
         dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
@@ -202,7 +249,7 @@ function a2drs_basic(A::Matrix{Float64}, lambda::Float64, problem::String, eps_o
         if k == M_max
             ## AA candidate
             gamma = compute_gamma(g, F_matrix)
-            alpha = compute_alpha(gamma)
+            alpha = compute_alpha(gamma, kmod)
             V_AA = compute_V_AA(V_matrix, alpha)
             V_AA = reshape(V_AA, n, m)
             ## Swaping
@@ -212,7 +259,7 @@ function a2drs_basic(A::Matrix{Float64}, lambda::Float64, problem::String, eps_o
         elseif M == M_max
             ## AA candidate
             gamma = compute_gamma(g, F_matrix)
-            alpha = compute_alpha(gamma)
+            alpha = compute_alpha(gamma, kmod)
             V_AA = compute_V_AA(V_matrix, alpha)
             V_AA = reshape(V_AA, n, m)
             ## Swaping
