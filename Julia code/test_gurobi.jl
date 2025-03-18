@@ -4,7 +4,7 @@ using Base.GC
 include("types.jl")
 include("solvers.jl")
 
-mat_filepath = "experiment_6_matrix_m200_n100_r25_d10_idx7.mat"
+mat_filepath = "experiment_6_matrix_m200_n100_r25_d25_idx10.mat"
 mat_data = matread(mat_filepath)
 A = mat_data["matrix"]
 A = Matrix(A)

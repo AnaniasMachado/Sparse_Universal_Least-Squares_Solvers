@@ -16,7 +16,7 @@ mat_files = readdir(matrices_folder)
 results_folder = "results/Experiment_$exp"
 
 methods = ["Gurobi", "LS", "ADMM", "hatAMP_data"]
-method = methods[3]
+method = methods[1]
 
 # Gurobi parameters
 opt_tol = 10^(-5)
@@ -36,8 +36,7 @@ df = DataFrame()
 # for mat_file in mat_files[18:19]
 # for mat_file in mat_files[31:end]
 # for mat_file in mat_files[51:end]
-for mat_file in mat_files[1:2]
-# for mat_file in mat_files
+for mat_file in mat_files
     mat_path = joinpath(matrices_folder, mat_file)
     mat_data = matread(mat_path)
 
@@ -75,7 +74,7 @@ for mat_file in mat_files[1:2]
         end
         GRB_P1_H_norm_0 = matrix_norm_0(GRB_P1_H)
         GRB_P1_H_norm_1 = norm(GRB_P1_H, 1)
-        matwrite("$(mat_file)_GRB_$(constraints[1]).mat", Dict("H" => GRB_P1_H))
+        # matwrite("$(mat_file)_GRB_$(constraints[1]).mat", Dict("H" => GRB_P1_H))
 
         constraints = ["P1", "Sym"]
 
@@ -84,7 +83,7 @@ for mat_file in mat_files[1:2]
         end
         GRB_P1_Sym_H_norm_0 = matrix_norm_0(GRB_P1_Sym_H)
         GRB_P1_Sym_H_norm_1 = norm(GRB_P1_Sym_H, 1)
-        matwrite("$(mat_file)_GRB_$(constraints[1])_$(constraints[2]).mat", Dict("H" => GRB_P1_Sym_H))
+        # matwrite("$(mat_file)_GRB_$(constraints[1])_$(constraints[2]).mat", Dict("H" => GRB_P1_Sym_H))
 
         result = DataFrame(
             m = [m],
@@ -114,11 +113,11 @@ for mat_file in mat_files[1:2]
         end
         ADMM_H_norm_0 = matrix_norm_0(ADMM_H)
         ADMM_H_norm_1 = norm(ADMM_H, 1)
-        if fixed_tol
-            matwrite("$(mat_file)_ADMMe.mat", Dict("H" => ADMM_H))
-        else
-            matwrite("$(mat_file)_ADMM.mat", Dict("H" => ADMM_H))
-        end
+        # if fixed_tol
+        #     matwrite("$(mat_file)_ADMMe.mat", Dict("H" => ADMM_H))
+        # else
+        #     matwrite("$(mat_file)_ADMM.mat", Dict("H" => ADMM_H))
+        # end
 
         result = DataFrame(
             m = [m],
