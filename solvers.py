@@ -59,6 +59,9 @@ def problem_1_norm_P1_solver(A):
     # Defines SoftMemLimit (in GigaBytes)
     # model.setParam('SoftMemLimit', 8)
 
+    # Defines OptimalityTol as 10^-5
+    model.setParam('OptimalityTol', 10 ** -5)
+
     # Defines TimeLimit as 2 hours (in seconds)
     model.setParam('TimeLimit', 2*60*60)
 

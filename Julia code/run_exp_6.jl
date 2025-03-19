@@ -154,28 +154,28 @@ for mat_file in mat_files
     end
 end
 
-# if method == "Gurobi"
-#     results_filename = "results_$(exp)_GRB.csv"
-#     results_filepath = joinpath(results_folder, results_filename)
-#     CSV.write(results_filepath, df)
-# elseif method == "LS"
-#     results_filename = "results_$(exp)_LS.csv"
-#     results_filepath = joinpath(results_folder, results_filename)
-#     CSV.write(results_filepath, df)
-# elseif method == "ADMM"
-#     if fixed_tol
-#         results_filename = "results_$(exp)_ADMMe.csv"
-#         results_filepath = joinpath(results_folder, results_filename)
-#         CSV.write(results_filepath, df)
-#     else
-#         results_filename = "results_$(exp)_ADMM.csv"
-#         results_filepath = joinpath(results_folder, results_filename)
-#         CSV.write(results_filepath, df)
-#     end
-# elseif method == "hatAMP_data"
-#         results_filename = "results_$(exp)_hatAMP.csv"
-#         results_filepath = joinpath(results_folder, results_filename)
-#         CSV.write(results_filepath, df)
-# else
-#     throw(ErrorException("Invalid method chose."))
-# end
+if method == "Gurobi"
+    results_filename = "results_$(exp)_GRB.csv"
+    results_filepath = joinpath(results_folder, results_filename)
+    CSV.write(results_filepath, df)
+elseif method == "LS"
+    results_filename = "results_$(exp)_LS.csv"
+    results_filepath = joinpath(results_folder, results_filename)
+    CSV.write(results_filepath, df)
+elseif method == "ADMM"
+    if fixed_tol
+        results_filename = "results_$(exp)_ADMMe.csv"
+        results_filepath = joinpath(results_folder, results_filename)
+        CSV.write(results_filepath, df)
+    else
+        results_filename = "results_$(exp)_ADMM.csv"
+        results_filepath = joinpath(results_folder, results_filename)
+        CSV.write(results_filepath, df)
+    end
+elseif method == "hatAMP_data"
+        results_filename = "results_$(exp)_hatAMP.csv"
+        results_filepath = joinpath(results_folder, results_filename)
+        CSV.write(results_filepath, df)
+else
+    throw(ErrorException("Invalid method chose."))
+end
