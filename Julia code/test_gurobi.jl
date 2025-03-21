@@ -4,7 +4,7 @@ using Base.GC
 include("types.jl")
 include("solvers.jl")
 
-mat_filepath = "experiment_6_matrix_m200_n100_r50_d10_idx1.mat"
+mat_filepath = "experiment_6_matrix_m180_n90_r30_d25_idx5.mat"
 mat_data = matread(mat_filepath)
 A = mat_data["matrix"]
 A = Matrix(A)
@@ -26,9 +26,9 @@ data = DataInst(hatA, hatm, hatn, r)
 constraints = ["P1"]
 opt_tol = 10^(-5)
 
-# GRB_P1_time = @elapsed begin
-#     GRB_P1_H = gurobi_solver(data, constraints, opt_tol)
-# end
+GRB_P1_time = @elapsed begin
+    GRB_P1_H = gurobi_solver(data, constraints, opt_tol)
+end
 
 GC.gc()
 

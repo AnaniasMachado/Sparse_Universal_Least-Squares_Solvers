@@ -55,11 +55,11 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
 
     if "Sym" in constraints
         @variable(model, H[1:data.n, 1:data.m], Symmetric, lower_bound=-Inf, upper_bound=Inf)
+        @variable(model, Z[1:data.n, 1:data.m], Symmetric, lower_bound=-Inf, upper_bound=Inf)
     else
         @variable(model, H[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
+        @variable(model, Z[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
     end
-
-    @variable(model, Z[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
 
     @objective(model, Min, sum(Z[i, j] for i in 1:data.n, j in 1:data.m))
 
@@ -72,18 +72,18 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
 
     # set_optimizer_attributes(inst.model, "OptimalityTol" => opt_tol)
 
-    # set_attribute(inst.model, "BarConvTol", 1e-5)
-    # set_attribute(inst.model, "FeasibilityTol", 1e-5)
-    # set_attribute(inst.model, "OptimalityTol", 1e-5)
+    set_attribute(inst.model, "BarConvTol", 1e-5)
+    set_attribute(inst.model, "FeasibilityTol", 1e-5)
+    set_attribute(inst.model, "OptimalityTol", 1e-5)
 
-    set_optimizer_attributes(inst.model, "BarConvTol" => 1e-5)
-    set_optimizer_attributes(inst.model, "FeasibilityTol" => 1e-5)
-    set_optimizer_attributes(inst.model, "OptimalityTol" => 1e-5)
+    # set_optimizer_attributes(inst.model, "BarConvTol" => 1e-5)
+    # set_optimizer_attributes(inst.model, "FeasibilityTol" => 1e-5)
+    # set_optimizer_attributes(inst.model, "OptimalityTol" => 1e-5)
 
-    set_optimizer_attribute(inst.model, "Method", 2)
+    # set_optimizer_attribute(inst.model, "Method", 2)
 
-    # set_optimizer_attribute(inst.model, "TimeLimit", 7200)
-    set_optimizer_attribute(inst.model, "TimeLimit", 600)
+    set_optimizer_attribute(inst.model, "TimeLimit", 7200)
+    # set_optimizer_attribute(inst.model, "TimeLimit", 600)
 
     set_optimizer_attribute(inst.model, "LogToConsole", 0)
 
