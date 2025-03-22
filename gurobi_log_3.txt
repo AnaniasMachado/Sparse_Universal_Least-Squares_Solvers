@@ -58,3 +58,36 @@ Iteration    Objective       Primal Inf.    Dual Inf.      Time
     4375    1.0837024e+02   0.000000e+00   0.000000e+00     37s
 
 Use crossover to convert LP symmetric solution to basic solution...
+Crossover log...
+
+   11546 variables added to crossover basis                       40s
+Warning: 2 variables dropped from basis
+
+Restart crossover...
+
+    4375 variables added to crossover basis                       53s
+   15802 variables added to crossover basis                       55s
+   16251 variables added to crossover basis                       60s
+
+    7522 DPushes remaining with DInf 0.0000000e+00                63s
+     365 DPushes remaining with DInf 0.0000000e+00                67s
+     281 DPushes remaining with DInf 0.0000000e+00                71s
+     277 DPushes remaining with DInf 0.0000000e+00                78s
+     270 DPushes remaining with DInf 0.0000000e+00                88s
+
+      11 PPushes remaining with PInf 3.9973325e+00               107s
+       0 PPushes remaining with PInf 3.5493341e+00               108s
+
+  Push phase complete: Pinf 3.5493341e+00, Dinf 1.1356764e+00    109s
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+    4572    1.0837007e+02   0.000000e+00   1.128627e+00    110s
+    4672    1.0836992e+02   1.625365e-01   3.585014e+10    250s
+    4780    1.0836974e+02   4.265399e-03   5.731364e+09    311s
+    4880    1.0925007e+02   2.342006e-04   9.347486e+08    327s
+    4980    1.0925007e+02   2.342006e-04   9.347486e+08    475s
+
+Stopped in 5064 iterations and 601.43 seconds (356.14 work units)
+Time limit reached
+
+User-callback calls 2837, time in user-callback 0.01 sec
