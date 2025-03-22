@@ -54,7 +54,9 @@ def problem_1_norm_P1_solver(A):
             model.addConstr(Z_plus_H[i, j] >= 0, name=f"constraint_ineq_2_i={i}_j={j}")
 
     # Configures log to not show messages on terminal
-    model.setParam("OutputFlag", 0)
+    # model.setParam("OutputFlag", 0)
+
+    model.setParam('LogFile', 'gurobi_log_4.txt')
 
     # Defines SoftMemLimit (in GigaBytes)
     # model.setParam('SoftMemLimit', 8)

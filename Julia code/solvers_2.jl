@@ -27,7 +27,7 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
     # set_attribute(model, "TimeLimit", 180)
     set_attribute(model, "TimeLimit", 600)
 
-    set_optimizer_attribute(model, "LogFile", "gurobi_log_3.txt")
+    # set_optimizer_attribute(model, "LogFile", "gurobi_log_3.txt")
 
     optimize!(model)
 
