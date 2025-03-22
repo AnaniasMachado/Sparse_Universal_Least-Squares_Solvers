@@ -354,10 +354,10 @@ uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
 
 [[deps.Gurobi]]
-deps = ["Gurobi_jll", "Libdl", "MathOptInterface"]
-git-tree-sha1 = "e2b6a292f2c642da5a109bf694dedd3d38978c66"
+deps = ["Gurobi_jll", "Libdl", "MathOptInterface", "PrecompileTools"]
+git-tree-sha1 = "0f04e135a553eb43a28a510d694ffce3d5b95195"
 uuid = "2e9cd046-0924-5485-92f1-d5272153d98b"
-version = "1.6.2"
+version = "1.7.2"
 
 [[deps.Gurobi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
