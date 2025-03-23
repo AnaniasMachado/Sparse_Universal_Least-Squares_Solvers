@@ -3,7 +3,7 @@ using Base.GC
 
 include("types.jl")
 #include("utility.jl")
-include("solvers_2.jl")
+include("solvers_3.jl")
 
 mat_filepath = "experiment_6_matrix_m180_n90_r30_d25_idx5.mat"
 mat_data = matread(mat_filepath)
