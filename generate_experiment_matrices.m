@@ -5,7 +5,7 @@ function generate_experiment_matrices(expn, m, n, r_values, d_values, n_mtx, out
     end
 
     % seed = randi([1, 1000000]);
-    seed = 1;
+    seed = 2;
 
     rng(seed);
 
