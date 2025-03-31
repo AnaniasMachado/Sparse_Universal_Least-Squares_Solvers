@@ -75,6 +75,7 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
     set_attribute(inst.model, "BarConvTol", 1e-5)
     set_attribute(inst.model, "FeasibilityTol", 1e-5)
     set_attribute(inst.model, "OptimalityTol", 1e-5)
+    set_attribute(inst.model, "DualReductions", 0)
 
     # set_optimizer_attributes(inst.model, "BarConvTol" => 1e-5)
     # set_optimizer_attributes(inst.model, "FeasibilityTol" => 1e-5)
