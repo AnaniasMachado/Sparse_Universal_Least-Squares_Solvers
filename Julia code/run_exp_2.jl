@@ -20,12 +20,10 @@ method = methods[1]
 
 # Gurobi parameters
 opt_tol = 10^(-5)
+time_limit = 1200
 
 df = DataFrame()
 
-P1_P4_H_norm_0_list = []
-P1_P4_H_norm_1_list = []
-P1_P4_H_rank_list = []
 P1_P4_time_list = []
 
 PMN_H_norm_0_list = []
@@ -34,6 +32,7 @@ PMN_H_rank_list = []
 PMN_time_list = []
 
 count = 0
+min_unsolvable_m = Inf
 
 for mat_file in mat_files
     global count += 1
@@ -61,16 +60,22 @@ for mat_file in mat_files
 
         constraints = ["P1", "P4"]
 
-        GRB_P1_P4_time = @elapsed begin
-            GRB_P1_P4_H = gurobi_solver(data, constraints, opt_tol)
+        GRB_P1_P4_time = "-"
+        if !("-" in P1_P4_time_list) || (m < min_unsolvable_m)
+            try
+                GRB_P1_P4_time = @elapsed begin
+                    GRB_P1_P4_H = gurobi_solver(data, constraints, opt_tol, time_limit)
+                end
+            catch e
+                if isa(e, ErrorException)
+                    GRB_P1_P4_time = "-"
+                    min_unsolvable_m = min(m, min_unsolvable_m)
+                else
+                    throw(ErrorException("Gurobi failed to solve problem something unexpected.", e))
+                end
+            end
         end
-        GRB_P1_P4_H_norm_0 = matrix_norm_0(GRB_P1_P4_H)
-        GRB_P1_P4_H_norm_1 = norm(GRB_P1_P4_H, 1)
-        GRB_P1_P4_H_rank = calculate_rank(GRB_P1_P4_H)
 
-        push!(P1_P4_H_norm_0_list, GRB_P1_P4_H_norm_0)
-        push!(P1_P4_H_norm_1_list, GRB_P1_P4_H_norm_1)
-        push!(P1_P4_H_rank_list, GRB_P1_P4_H_rank)
         push!(P1_P4_time_list, GRB_P1_P4_time)
 
         constraints = ["PMN"]
@@ -88,14 +93,15 @@ for mat_file in mat_files
         push!(PMN_time_list, GRB_PMN_time)
 
         if count % 5 == 0
-            GRB_P1_P4_H_norm_0_mean = mean(P1_P4_H_norm_0_list)
-            GRB_P1_P4_H_norm_1_mean = mean(P1_P4_H_norm_1_list)
-            GRB_P1_P4_H_rank_mean = round(Int, mean(P1_P4_H_rank_list))
-            GRB_P1_P4_time_mean = mean(P1_P4_time_list)
+            GRB_P1_P4_time_mean = -1.0
+            if !("-" in P1_P4_time_list)
+                GRB_P1_P4_time_mean = mean(P1_P4_time_list)
+            end
 
             GRB_PMN_H_norm_0_mean = mean(PMN_H_norm_0_list)
             GRB_PMN_H_norm_1_mean = mean(PMN_H_norm_1_list)
-            GRB_PMN_H_rank_mean = round(Int, mean(PMN_H_rank_list))
+            # GRB_PMN_H_rank_mean = round(Int, mean(PMN_H_rank_list))
+            GRB_PMN_H_rank_mean = mean(PMN_H_rank_list)
             GRB_PMN_time_mean = mean(PMN_time_list)
 
             result = DataFrame(
@@ -103,21 +109,15 @@ for mat_file in mat_files
                 n = [n],
                 r = [r],
                 d = [d],
-                GRB_P1_P4_H_norm_0_mean = [GRB_P1_P4_H_norm_0_mean],
-                GRB_P1_P4_H_norm_1_mean = [GRB_P1_P4_H_norm_1_mean],
-                GRB_P1_P4_H_rank_mean = [GRB_P1_P4_H_rank_mean],
-                GRB_P1_P4_time_mean = [GRB_P1_P4_time_mean],
                 GRB_PMN_H_norm_0_mean = [GRB_PMN_H_norm_0_mean],
                 GRB_PMN_H_norm_1_mean = [GRB_PMN_H_norm_1_mean],
                 GRB_PMN_H_rank_mean = [GRB_PMN_H_rank_mean],
+                GRB_P1_P4_time_mean = [GRB_P1_P4_time_mean],
                 GRB_PMN_time_mean = [GRB_PMN_time_mean]
             )
 
             append!(df, result)
 
-            empty!(P1_P4_H_norm_0_list)
-            empty!(P1_P4_H_norm_1_list)
-            empty!(P1_P4_H_rank_list)
             empty!(P1_P4_time_list)
 
             empty!(PMN_H_norm_0_list)

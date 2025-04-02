@@ -48,7 +48,7 @@ function add_constraints(inst::GurobiInst, data::DataInst, constraints::Vector{S
     end
 end
 
-function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Float64=10^(-8))
+function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Float64=10^(-5), time_limit::Int64=7200)
     null_matrix = zeros(data.n, data.m)
 
     model = Model(Gurobi.Optimizer)
@@ -74,15 +74,15 @@ function gurobi_solver(data::DataInst, constraints::Vector{String}, opt_tol::Flo
 
     set_attribute(inst.model, "BarConvTol", 1e-5)
     set_attribute(inst.model, "FeasibilityTol", 1e-5)
-    set_attribute(inst.model, "OptimalityTol", 1e-5)
-    set_attribute(inst.model, "DualReductions", 0)
+    set_attribute(inst.model, "OptimalityTol", opt_tol)
+
+    # set_attribute(inst.model, "DualReductions", 0)
 
     # set_optimizer_attributes(inst.model, "BarConvTol" => 1e-5)
     # set_optimizer_attributes(inst.model, "FeasibilityTol" => 1e-5)
     # set_optimizer_attributes(inst.model, "OptimalityTol" => 1e-5)
 
-    set_optimizer_attribute(inst.model, "TimeLimit", 7200)
-    # set_optimizer_attribute(inst.model, "TimeLimit", 600)
+    set_optimizer_attribute(inst.model, "TimeLimit", time_limit)
 
     set_optimizer_attribute(inst.model, "LogToConsole", 0)
 
