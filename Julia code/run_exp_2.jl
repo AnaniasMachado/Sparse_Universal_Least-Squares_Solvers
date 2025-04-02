@@ -56,7 +56,7 @@ for mat_file in mat_files
     d = parse(Int, d_value)
 
     if method == "Gurobi"
-        data = DataInst(A, m, n, r)
+        data = DataInst(A', n, m, r)
 
         constraints = ["P1", "P4"]
 
@@ -69,7 +69,7 @@ for mat_file in mat_files
             catch e
                 if isa(e, ErrorException)
                     GRB_P1_P4_time = "-"
-                    min_unsolvable_m = min(m, min_unsolvable_m)
+                    global min_unsolvable_m = min(m, min_unsolvable_m)
                 else
                     throw(ErrorException("Gurobi failed to solve problem something unexpected.", e))
                 end
@@ -105,10 +105,9 @@ for mat_file in mat_files
             GRB_PMN_time_mean = mean(PMN_time_list)
 
             result = DataFrame(
-                m = [m],
-                n = [n],
+                m = [n],
+                n = [m],
                 r = [r],
-                d = [d],
                 GRB_PMN_H_norm_0_mean = [GRB_PMN_H_norm_0_mean],
                 GRB_PMN_H_norm_1_mean = [GRB_PMN_H_norm_1_mean],
                 GRB_PMN_H_rank_mean = [GRB_PMN_H_rank_mean],
