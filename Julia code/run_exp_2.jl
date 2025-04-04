@@ -61,7 +61,7 @@ for mat_file in mat_files
         constraints = ["P1", "P4"]
 
         GRB_P1_P4_time = "-"
-        if !("-" in P1_P4_time_list) || (m < min_unsolvable_m)
+        if !("-" in P1_P4_time_list) && (m < min_unsolvable_m)
             try
                 GRB_P1_P4_time = @elapsed begin
                     GRB_P1_P4_H = gurobi_solver(data, constraints, opt_tol, time_limit)
