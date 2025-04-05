@@ -53,13 +53,6 @@ for mat_file in mat_files
     PLS_S = vec(svd(PLS_coeff).S)
     PMN_S = vec(svd(PMN_coeff).S)
 
-    # P1_Max_SV = maximum(P1_S)^2
-    # P1_Min_SV = minimum([SV for SV in P1_S if SV > epsilon])^2
-    # PLS_Max_SV = maximum(PLS_S)
-    # PLS_Min_SV = minimum([SV for SV in PLS_S if SV > epsilon])
-    # PMN_Max_SV = maximum(PMN_S)
-    # PMN_Min_SV = minimum([SV for SV in PMN_S if SV > epsilon])
-
     P1_Max_SV = P1_S[1]^2
     P1_Min_SV = P1_S[r]^2
     PLS_Max_SV = PLS_S[1]
@@ -82,7 +75,7 @@ for mat_file in mat_files
 
         P1_coeff_rank = r^2
         PLS_coeff_rank = m*r
-        PMN_coeff_rank = m*r
+        PMN_coeff_rank = n*r
 
         result = DataFrame(
             m = [m],
