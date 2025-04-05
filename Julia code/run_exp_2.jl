@@ -32,7 +32,8 @@ PMN_H_rank_list = []
 PMN_time_list = []
 
 count = 0
-min_unsolvable_m = Inf
+min_P1_P4_unsolvable_m = 60
+min_PMN_unsolvable_m = Inf
 
 for mat_file in mat_files
     global count += 1
@@ -55,13 +56,17 @@ for mat_file in mat_files
     r = parse(Int, r_value)
     d = parse(Int, d_value)
 
+    if m <= 120
+        continue
+    end
+
     if method == "Gurobi"
         data = DataInst(A', n, m, r)
 
         constraints = ["P1", "P4"]
 
         GRB_P1_P4_time = "-"
-        if !("-" in P1_P4_time_list) && (m < min_unsolvable_m)
+        if !("-" in P1_P4_time_list) && (m < min_P1_P4_unsolvable_m)
             try
                 GRB_P1_P4_time = @elapsed begin
                     GRB_P1_P4_H = gurobi_solver(data, constraints, opt_tol, time_limit)
@@ -69,7 +74,7 @@ for mat_file in mat_files
             catch e
                 if isa(e, ErrorException)
                     GRB_P1_P4_time = "-"
-                    global min_unsolvable_m = min(m, min_unsolvable_m)
+                    global min_P1_P4_unsolvable_m = min(m, min_P1_P4_unsolvable_m)
                 else
                     throw(ErrorException("Gurobi failed to solve problem something unexpected.", e))
                 end
@@ -80,12 +85,34 @@ for mat_file in mat_files
 
         constraints = ["PMN"]
 
-        GRB_PMN_time = @elapsed begin
-            GRB_PMN_H = gurobi_solver(data, constraints, opt_tol)
+        GRB_PMN_time = "-"
+        GRB_PMN_H_norm_0 = "-"
+        GRB_PMN_H_norm_1 = "-"
+        GRB_PMN_H_rank = "-"
+        if !("-" in PMN_time_list) && (m < min_PMN_unsolvable_m)
+            try
+                GRB_PMN_time = @elapsed begin
+                    GRB_PMN_H = gurobi_solver(data, constraints, opt_tol, time_limit)
+                end
+                GRB_PMN_H_norm_0 = matrix_norm_0(GRB_PMN_H)
+                GRB_PMN_H_norm_1 = norm(GRB_PMN_H, 1)
+                GRB_PMN_H_rank = calculate_rank(GRB_PMN_H)
+            catch e
+                if isa(e, ErrorException)
+                    GRB_PMN_time = "-"
+                    global min_PMN_unsolvable_m = min(m, min_PMN_unsolvable_m)
+                else
+                    throw(ErrorException("Gurobi failed to solve problem something unexpected.", e))
+                end
+            end
         end
-        GRB_PMN_H_norm_0 = matrix_norm_0(GRB_PMN_H)
-        GRB_PMN_H_norm_1 = norm(GRB_PMN_H, 1)
-        GRB_PMN_H_rank = calculate_rank(GRB_PMN_H)
+
+        # GRB_PMN_time = @elapsed begin
+        #     GRB_PMN_H = gurobi_solver(data, constraints, opt_tol)
+        # end
+        # GRB_PMN_H_norm_0 = matrix_norm_0(GRB_PMN_H)
+        # GRB_PMN_H_norm_1 = norm(GRB_PMN_H, 1)
+        # GRB_PMN_H_rank = calculate_rank(GRB_PMN_H)
 
         push!(PMN_H_norm_0_list, GRB_PMN_H_norm_0)
         push!(PMN_H_norm_1_list, GRB_PMN_H_norm_1)
@@ -98,11 +125,17 @@ for mat_file in mat_files
                 GRB_P1_P4_time_mean = mean(P1_P4_time_list)
             end
 
-            GRB_PMN_H_norm_0_mean = mean(PMN_H_norm_0_list)
-            GRB_PMN_H_norm_1_mean = mean(PMN_H_norm_1_list)
-            # GRB_PMN_H_rank_mean = round(Int, mean(PMN_H_rank_list))
-            GRB_PMN_H_rank_mean = mean(PMN_H_rank_list)
-            GRB_PMN_time_mean = mean(PMN_time_list)
+            GRB_PMN_H_norm_0_mean = -1.0
+            GRB_PMN_H_norm_1_mean = -1.0
+            GRB_PMN_H_rank_mean = -1.0
+            GRB_PMN_time_mean = -1.0
+
+            if !("-" in PMN_time_list)
+                GRB_PMN_H_norm_0_mean = mean(PMN_H_norm_0_list)
+                GRB_PMN_H_norm_1_mean = mean(PMN_H_norm_1_list)
+                GRB_PMN_H_rank_mean = mean(PMN_H_rank_list)
+                GRB_PMN_time_mean = mean(PMN_time_list)
+            end
 
             result = DataFrame(
                 m = [n],
