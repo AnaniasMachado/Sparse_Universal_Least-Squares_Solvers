@@ -53,12 +53,19 @@ for mat_file in mat_files
     PLS_S = vec(svd(PLS_coeff).S)
     PMN_S = vec(svd(PMN_coeff).S)
 
-    P1_Max_SV = maximum(P1_S)
-    P1_Min_SV = minimum([SV for SV in P1_S if SV > epsilon])
-    PLS_Max_SV = maximum(PLS_S)
-    PLS_Min_SV = minimum([SV for SV in PLS_S if SV > epsilon])
-    PMN_Max_SV = maximum(PMN_S)
-    PMN_Min_SV = minimum([SV for SV in PMN_S if SV > epsilon])
+    # P1_Max_SV = maximum(P1_S)^2
+    # P1_Min_SV = minimum([SV for SV in P1_S if SV > epsilon])^2
+    # PLS_Max_SV = maximum(PLS_S)
+    # PLS_Min_SV = minimum([SV for SV in PLS_S if SV > epsilon])
+    # PMN_Max_SV = maximum(PMN_S)
+    # PMN_Min_SV = minimum([SV for SV in PMN_S if SV > epsilon])
+
+    P1_Max_SV = P1_S[1]^2
+    P1_Min_SV = P1_S[r]^2
+    PLS_Max_SV = PLS_S[1]
+    PLS_Min_SV = PLS_S[r]
+    PMN_Max_SV = PMN_S[1]
+    PMN_Min_SV = PMN_S[r]
 
     P1_CN = P1_Max_SV / P1_Min_SV
     PLS_CN = PLS_Max_SV / PLS_Min_SV
@@ -85,7 +92,7 @@ for mat_file in mat_files
             PLS_coeff_rank = [PLS_coeff_rank],
             PMN_coeff_rank = [PMN_coeff_rank],
             P1_CN_mean = [P1_CN_mean],
-            PLS_CN_mean = [GRB_PLS_H_norm_1_mean],
+            PLS_CN_mean = [PLS_CN_mean],
             PMN_CN_mean = [PMN_CN_mean]
         )
 
@@ -99,10 +106,6 @@ for mat_file in mat_files
     GC.gc()
 end
 
-if method == "Gurobi"
-    results_filename = "results_$(exp)_stats.csv"
-    results_filepath = joinpath(results_folder, results_filename)
-    CSV.write(results_filepath, df)
-else
-    throw(ErrorException("Invalid method chose."))
-end
+results_filename = "results_$(exp)_stats.csv"
+results_filepath = joinpath(results_folder, results_filename)
+CSV.write(results_filepath, df)
