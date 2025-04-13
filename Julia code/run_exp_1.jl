@@ -13,6 +13,8 @@ exp = "1"
 matrices_folder = "./Experiment_Matrices/Experiment_" * exp
 mat_files = readdir(matrices_folder)
 
+solutions_folder = "./Solutions/Experiment_" * exp
+
 results_folder = "results/Experiment_$exp"
 
 methods = ["Gurobi"]
@@ -50,15 +52,17 @@ for mat_file in mat_files
     n_value = match(r"n(\d+)", mat_file).captures[1]
     r_value = match(r"r(\d+)", mat_file).captures[1]
     d_value = match(r"d(\d+)", mat_file).captures[1]
+    idx_value = match(r"idx(\d+)", mat_file).captures[1]
 
     m = parse(Int, m_value)
     n = parse(Int, n_value)
     r = parse(Int, r_value)
     d = parse(Int, d_value)
+    idx = parse(Int, idx_value)
 
-    if m <= 500
-        continue
-    end
+    # if m <= 500
+    #     continue
+    # end
 
     if method == "Gurobi"
         data = DataInst(A, m, n, r)
@@ -71,6 +75,10 @@ for mat_file in mat_files
                 GRB_P1_P3_time = @elapsed begin
                     GRB_P1_P3_H = gurobi_solver(data, constraints, opt_tol, time_limit)
                 end
+
+                solution_filename = "Gurobi/Experiment_$(exp)_P1_P3_m_$(m)_n_$(n)_idx_$(idx)"
+                solution_filepath = joinpath(solutions_folder, solution_filename)
+                matwrite(solution_filepath, Dict("H" => GRB_P1_P3_H, "time" => GRB_P1_P3_time))
             catch e
                 if isa(e, ErrorException)
                     GRB_P1_P3_time = "-"
@@ -97,6 +105,10 @@ for mat_file in mat_files
                 GRB_PLS_H_norm_0 = matrix_norm_0(GRB_PLS_H)
                 GRB_PLS_H_norm_1 = norm(GRB_PLS_H, 1)
                 GRB_PLS_H_rank = calculate_rank(GRB_PLS_H)
+
+                solution_filename = "Gurobi/Experiment_$(exp)_PLS_m_$(m)_n_$(n)_idx_$(idx)"
+                solution_filepath = joinpath(solutions_folder, solution_filename)
+                matwrite(solution_filepath, Dict("H" => GRB_PLS_H, "time" => GRB_PLS_time))
             catch e
                 if isa(e, ErrorException)
                     GRB_PLS_time = "-"
@@ -106,13 +118,6 @@ for mat_file in mat_files
                 end
             end
         end
-
-        # GRB_PLS_time = @elapsed begin
-        #     GRB_PLS_H = gurobi_solver(data, constraints, opt_tol, time_limit)
-        # end
-        # GRB_PLS_H_norm_0 = matrix_norm_0(GRB_PLS_H)
-        # GRB_PLS_H_norm_1 = norm(GRB_PLS_H, 1)
-        # GRB_PLS_H_rank = calculate_rank(GRB_PLS_H)
 
         push!(PLS_H_norm_0_list, GRB_PLS_H_norm_0)
         push!(PLS_H_norm_1_list, GRB_PLS_H_norm_1)

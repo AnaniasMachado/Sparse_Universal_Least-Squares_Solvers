@@ -18,7 +18,7 @@ end
 #     return norm_0
 # end
 
-function matrix_norm_0(A::Matrix{Float64})
+function matrix_norm_0(A::Union{Matrix{Float64}, Matrix{Int64}})
     norm_0 = 0
     for a in A
         if abs(a) > epsilon
@@ -28,7 +28,7 @@ function matrix_norm_0(A::Matrix{Float64})
     return norm_0
 end
 
-function calculate_rank(A::Matrix{Float64})
+function calculate_rank(A::Union{Matrix{Float64}, Matrix{Int64}})
     U, S, V = svd(A)
     S = Diagonal(S)
     rank = 0

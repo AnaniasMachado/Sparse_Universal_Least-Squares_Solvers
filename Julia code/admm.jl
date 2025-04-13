@@ -7,7 +7,12 @@ function soft_thresholding_matrix(X::Matrix{Float64}, lambda::Float64)
 end
 
 function count_singular_values(S::Diagonal)
-    rank = count(x -> abs(x) > epsilon, S)
+    rank = 0
+    for a in S
+        if abs(a) > epsilon
+            rank += 1
+        end
+    end
     return rank
 end
 
@@ -60,6 +65,70 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
             matrix_norms = [norm(Ek), norm(V2ZU1T), V1DinvU1T_F]
             primal_upper_bound = eps_abs * sqrt(m*n) + eps_rel * maximum(matrix_norms)
             dual_upper_bound = eps_abs * sqrt((n-r)*r) + eps_rel * rho * norm(V2' * Lambda * U1)
+            if (rk_F <= primal_upper_bound) && (sk_F <= dual_upper_bound)
+                break
+            end
+        else
+            if (rk_F <= eps_opt) && (sk_F <= eps_opt)
+                break
+            end
+        end
+        # Makes Ek the new Ek-1
+        Ekm = Ek
+        # Checks time limit
+        elapsed_time = time() - start_time
+        if elapsed_time > time_limit
+            println("TimeLimit: ADMM exceed time limit to solve the problem.")
+            return "-"
+        end
+    end
+    return H
+end
+
+function admm_p134(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::Float64, fixed_tol::Bool, eps_opt::Float64, time_limit::Int64)
+    m, n = size(A)
+    U, S, V = svd(A)
+    S = Diagonal(S)
+    r = count_singular_values(S)
+    D = S[1:r, 1:r]
+    D_inv = inv(D)
+    U1 = U[:, 1:r]
+    U2 = U[:, r+1:end]
+    V1 = V[:, 1:r]
+    V2 = V[:, r+1:end]
+
+    V1DinvU1T = V1 * D_inv * U1'
+    V1DinvU1T_F = norm(V1DinvU1T)
+
+    V2V2T = V2 * V2'
+    U1U1T = U1 * U1'
+    U2U2T = U2 * U2'
+
+    Z = zeros(n - r, r)
+    H = zeros(n, m)
+    Lambda, Ekm = variables_initialization(V1, U1, D_inv, rho)
+    start_time = time()
+    k = 0
+    while true
+        k += 1
+        V2WU2T = V2V2T * (Ekm - Lambda) * U2U2T
+        H = V1DinvU1T + V2WU2T
+        # Updates Ek
+        Ek = soft_thresholding_matrix(H + Lambda, 1/rho)
+        res_infeas = H - Ek
+        Lambda += res_infeas
+        # Calculates stop criterion variables
+        rk_F = norm(res_infeas)
+        sk_F = rho * norm(V2' * (Ek - Ekm) * U2)
+        # if k % 100 == 0
+        #     println("ADMM iteration: $k")
+        #     println("ADMM primal residual: $rk_F)")
+        #     println("ADMM dual residual: $sk_F)")
+        # end
+        if !fixed_tol
+            matrix_norms = [norm(Ek), norm(V2WU2T), V1DinvU1T_F]
+            primal_upper_bound = eps_abs * sqrt(m*n) + eps_rel * maximum(matrix_norms)
+            dual_upper_bound = eps_abs * sqrt((n-r)*r) + eps_rel * rho * norm(V2' * Lambda * U2)
             if (rk_F <= primal_upper_bound) && (sk_F <= dual_upper_bound)
                 break
             end

@@ -13,6 +13,8 @@ exp = "6"
 matrices_folder = "./Experiment_Matrices/Experiment_" * exp
 mat_files = readdir(matrices_folder)
 
+solutions_folder = "./Solutions/Experiment_" * exp
+
 results_folder = "results/Experiment_$exp"
 
 methods = ["Gurobi", "LS", "ADMM", "hatAMP_data"]
@@ -28,7 +30,7 @@ eps_abs = epsilon
 eps_rel = epsilon
 fixed_tol = false
 eps_opt = epsilon
-time_limit = 2*60*60
+time_limit = 1200
 
 df = DataFrame()
 
@@ -46,11 +48,13 @@ for mat_file in mat_files
     n_value = match(r"n(\d+)", mat_file).captures[1]
     r_value = match(r"r(\d+)", mat_file).captures[1]
     d_value = match(r"d(\d+)", mat_file).captures[1]
+    idx_value = match(r"idx(\d+)", mat_file).captures[1]
 
     m = parse(Int, m_value)
     n = parse(Int, n_value)
     r = parse(Int, r_value)
     d = parse(Int, d_value)
+    idx = parse(Int, idx_value)
 
     A_norm_0 = matrix_norm_0(A)
     A_norm_1 = norm(A, 1)
@@ -64,14 +68,16 @@ for mat_file in mat_files
         hatm, hatn = size(hatA)
         data = DataInst(hatA, hatm, hatn, r)
 
-        constraints = ["P1"]
+        # constraints = ["P1"]
 
-        GRB_P1_time = @elapsed begin
-            GRB_P1_H = gurobi_solver(data, constraints, opt_tol)
-        end
-        GRB_P1_H_norm_0 = matrix_norm_0(GRB_P1_H)
-        GRB_P1_H_norm_1 = norm(GRB_P1_H, 1)
-        # matwrite("$(mat_file)_GRB_$(constraints[1]).mat", Dict("H" => GRB_P1_H))
+        # GRB_P1_time = @elapsed begin
+        #     GRB_P1_H = gurobi_solver(data, constraints, opt_tol)
+        # end
+        # GRB_P1_H_norm_0 = matrix_norm_0(GRB_P1_H)
+        # GRB_P1_H_norm_1 = norm(GRB_P1_H, 1)
+        # solution_filename = "Gurobi/Experiment_$(exp)_P1_m_$(m)_n_$(n)_d_$(d)_idx_$(idx)"
+        # solution_filepath = joinpath(solutions_folder, solution_filename)
+        # matwrite(solution_filepath, Dict("H" => GRB_P1_H, "time" => GRB_P1_time))
 
         constraints = ["P1", "Sym"]
 
@@ -80,7 +86,26 @@ for mat_file in mat_files
         end
         GRB_P1_Sym_H_norm_0 = matrix_norm_0(GRB_P1_Sym_H)
         GRB_P1_Sym_H_norm_1 = norm(GRB_P1_Sym_H, 1)
-        # matwrite("$(mat_file)_GRB_$(constraints[1])_$(constraints[2]).mat", Dict("H" => GRB_P1_Sym_H))
+        solution_filename = "Gurobi/Experiment_$(exp)_P1_Sym_m_$(m)_n_$(n)_d_$(d)_idx_$(idx)"
+        solution_filepath = joinpath(solutions_folder, solution_filename)
+        matwrite(solution_filepath, Dict("H" => GRB_P1_Sym_H, "time" => GRB_P1_Sym_time))
+
+        # result = DataFrame(
+        #     m = [m],
+        #     n = [n],
+        #     r = [r],
+        #     d = [d],
+        #     A_norm_0 = [A_norm_0],
+        #     A_norm_1 = [A_norm_1],
+        #     AMP_norm_0 = [AMP_norm_0],
+        #     AMP_norm_1 = [AMP_norm_1],
+        #     GRB_P1_H_norm_0 = [GRB_P1_H_norm_0],
+        #     GRB_P1_H_norm_1 = [GRB_P1_H_norm_1],
+        #     GRB_P1_time = [GRB_P1_time],
+        #     GRB_P1_Sym_H_norm_0 = [GRB_P1_Sym_H_norm_0],
+        #     GRB_P1_Sym_H_norm_1 = [GRB_P1_Sym_H_norm_1],
+        #     GRB_P1_Sym_time = [GRB_P1_Sym_time]
+        # )
 
         result = DataFrame(
             m = [m],
@@ -91,9 +116,6 @@ for mat_file in mat_files
             A_norm_1 = [A_norm_1],
             AMP_norm_0 = [AMP_norm_0],
             AMP_norm_1 = [AMP_norm_1],
-            GRB_P1_H_norm_0 = [GRB_P1_H_norm_0],
-            GRB_P1_H_norm_1 = [GRB_P1_H_norm_1],
-            GRB_P1_time = [GRB_P1_time],
             GRB_P1_Sym_H_norm_0 = [GRB_P1_Sym_H_norm_0],
             GRB_P1_Sym_H_norm_1 = [GRB_P1_Sym_H_norm_1],
             GRB_P1_Sym_time = [GRB_P1_Sym_time]
@@ -110,11 +132,15 @@ for mat_file in mat_files
         end
         ADMM_H_norm_0 = matrix_norm_0(ADMM_H)
         ADMM_H_norm_1 = norm(ADMM_H, 1)
-        # if fixed_tol
-        #     matwrite("$(mat_file)_ADMMe.mat", Dict("H" => ADMM_H))
-        # else
-        #     matwrite("$(mat_file)_ADMM.mat", Dict("H" => ADMM_H))
-        # end
+        if fixed_tol
+            solution_filename = "ADMMe/Experiment_$(exp)_P123_m_$(m)_n_$(n)_d_$(d)_idx_$(idx)"
+            solution_filepath = joinpath(solutions_folder, solution_filename)
+            matwrite(solution_filepath, Dict("H" => ADMM_H, "time" => ADMM_time))
+        else
+            solution_filename = "ADMM/Experiment_$(exp)_P123_m_$(m)_n_$(n)_d_$(d)_idx_$(idx)"
+            solution_filepath = joinpath(solutions_folder, solution_filename)
+            matwrite(solution_filepath, Dict("H" => ADMM_H, "time" => ADMM_time))
+        end
 
         result = DataFrame(
             m = [m],

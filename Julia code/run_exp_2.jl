@@ -15,6 +15,10 @@ mat_files = readdir(matrices_folder)
 
 results_folder = "results/Experiment_$exp"
 
+solutions_folder = "./Solutions/Experiment_" * exp
+
+results_folder = "results/Experiment_$exp"
+
 methods = ["Gurobi"]
 method = methods[1]
 
@@ -50,15 +54,17 @@ for mat_file in mat_files
     n_value = match(r"n(\d+)", mat_file).captures[1]
     r_value = match(r"r(\d+)", mat_file).captures[1]
     d_value = match(r"d(\d+)", mat_file).captures[1]
+    idx_value = match(r"idx(\d+)", mat_file).captures[1]
 
     m = parse(Int, m_value)
     n = parse(Int, n_value)
     r = parse(Int, r_value)
     d = parse(Int, d_value)
+    idx = parse(Int, idx_value)
 
-    if m <= 120
-        continue
-    end
+    # if m <= 120
+    #     continue
+    # end
 
     if method == "Gurobi"
         data = DataInst(A', n, m, r)
@@ -71,6 +77,10 @@ for mat_file in mat_files
                 GRB_P1_P4_time = @elapsed begin
                     GRB_P1_P4_H = gurobi_solver(data, constraints, opt_tol, time_limit)
                 end
+
+                solution_filename = "Gurobi/Experiment_$(exp)_P1_P4_m_$(m)_n_$(n)_idx_$(idx))"
+                solution_filepath = joinpath(solutions_folder, solution_filename)
+                matwrite(solution_filepath, Dict("H" => GRB_P1_P4_H, "time" => GRB_P1_P4_time))
             catch e
                 if isa(e, ErrorException)
                     GRB_P1_P4_time = "-"
@@ -97,6 +107,10 @@ for mat_file in mat_files
                 GRB_PMN_H_norm_0 = matrix_norm_0(GRB_PMN_H)
                 GRB_PMN_H_norm_1 = norm(GRB_PMN_H, 1)
                 GRB_PMN_H_rank = calculate_rank(GRB_PMN_H)
+
+                solution_filename = "Gurobi/Experiment_$(exp)_PMN_m_$(m)_n_$(n)_idx_$(idx)"
+                solution_filepath = joinpath(solutions_folder, solution_filename)
+                matwrite(solution_filepath, Dict("H" => GRB_PMN_H, "time" => GRB_PMN_time))
             catch e
                 if isa(e, ErrorException)
                     GRB_PMN_time = "-"

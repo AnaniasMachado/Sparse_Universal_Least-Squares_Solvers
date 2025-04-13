@@ -159,17 +159,18 @@ def read_matrix(matrix_filepath):
         return dense_matrix
     return matrix
 
-def get_m_n_r_d_from_matrix_filepath(matrix_filepath):
+def get_m_n_r_d_idx_from_matrix_filepath(matrix_filepath):
     # Using regex to find values of m, n, r and d
-    match = re.search(r'm(\d+)_n(\d+)_r(\d+)_d(\d+)', matrix_filepath)
+    match = re.search(r'm(\d+)_n(\d+)_r(\d+)_d(\d+)_idx(\d+)', matrix_filepath)
 
     if match:
         m = int(match.group(1))
         n = int(match.group(2))
         r = int(match.group(3))
         d = int(match.group(4))
+        idx = int(match.group(5))
         
-        return [m, n, r, d / 100]
+        return [m, n, r, d / 100, idx]
     else:
         raise Exception("ReadError: Could not read all values.")
 
