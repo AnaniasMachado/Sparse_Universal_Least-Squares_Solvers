@@ -50,7 +50,7 @@ for mat_file in mat_files
 end
 
 stats = Dict()
-stats_list = ["norm_0", "norm_1", "rank", "time"]
+stats_list = ["A_norm_0", "AMP_norm_0", "AMP_norm_1", "hatAMP_norm_0", "hatAMP_norm_1", "norm_0", "norm_1", "rank", "time"]
 
 for n in n_values
     stats[n] = Dict()
@@ -61,15 +61,20 @@ end
 
 for n in n_values
     if length(solutions[n]) < 5
-        stats[n]["norm_0"] = -1.0
-        stats[n]["norm_1"] = -1.0
-        stats[n]["rank"] = -1.0
-        stats[n]["time"] = -1.0
+        for stat in stats_list
+            stats[n][stat] = -1.0
+        end
         continue
     end
-    H_div_AMP_norm_0_sum = 0
-    H_div_AMP_norm_1_sum = 0
-    H_div_AMP_rank_sum = 0
+    A_norm_0_sum = 0
+    AMP_norm_0_sum = 0
+    AMP_norm_1_sum = 0
+    hatAMP_norm_0_sum = 0
+    hatAMP_norm_1_sum = 0
+
+    H_norm_0_sum = 0
+    H_norm_1_sum = 0
+    H_rank_sum = 0
     H_time_sum = 0
     for i in 1:5
         mat_file = mat_files_grouped[n][i]
@@ -77,10 +82,15 @@ for n in n_values
         mat_data = matread(mat_path)
         A = mat_data["matrix"]
         A = Matrix(A)
+        A_norm_0 = matrix_norm_0(A)
         AMP = pinv(A)
         AMP_norm_0 = matrix_norm_0(AMP)
         AMP_norm_1 = norm(AMP, 1)
         AMP_rank = calculate_rank(AMP)
+        hatA = A' * A
+        hatAMP = pinv(hatA)
+        hatAMP_norm_0 = matrix_norm_0(hatAMP)
+        hatAMP_norm_1 = norm(hatAMP, 1)
 
         sol_file = solutions[n][i]
         sol_path = joinpath(solutions_folder, sol_file)
@@ -92,14 +102,26 @@ for n in n_values
         H_rank = calculate_rank(H)
         H_time = sol_data["time"]
 
-        H_div_AMP_norm_0_sum += H_norm_0 / AMP_norm_0
-        H_div_AMP_norm_1_sum += H_norm_1 / AMP_norm_1
-        H_div_AMP_rank_sum += H_rank / AMP_rank
+        A_norm_0_sum += A_norm_0
+        AMP_norm_0_sum += AMP_norm_0
+        AMP_norm_1_sum += AMP_norm_1
+        hatAMP_norm_0_sum += hatAMP_norm_0
+        hatAMP_norm_1_sum += hatAMP_norm_1
+
+        H_norm_0_sum += H_norm_0
+        H_norm_1_sum += H_norm_1
+        H_rank_sum += H_rank
         H_time_sum += H_time
     end
-    stats[n]["norm_0"] = H_div_AMP_norm_0_sum / 5
-    stats[n]["norm_1"] = H_div_AMP_norm_1_sum / 5
-    stats[n]["rank"] = H_div_AMP_rank_sum / 5
+    stats[n]["A_norm_0"] = A_norm_0_sum / 5
+    stats[n]["AMP_norm_0"] = AMP_norm_0_sum / 5
+    stats[n]["AMP_norm_1"] = AMP_norm_1_sum / 5
+    stats[n]["hatAMP_norm_0"] = hatAMP_norm_0_sum / 5
+    stats[n]["hatAMP_norm_1"] = hatAMP_norm_1_sum / 5
+
+    stats[n]["norm_0"] = H_norm_0_sum / 5
+    stats[n]["norm_1"] = H_norm_1_sum / 5
+    stats[n]["rank"] = H_rank_sum / 5
     stats[n]["time"] = H_time_sum / 5
 end
 
