@@ -19,11 +19,15 @@ sol_files = readdir(solutions_folder)
 results_folder = "results/Experiment_$exp"
 
 n_values = [40, 60]
+d_values = [10, 25]
 
 solutions = Dict()
 
 for n in n_values
-    solutions[n] = []
+    solutions[n] = Dict()
+    for d in d_values
+        solutions[n][d] = []
+    end
 end
 
 # Stores the solution files of each value of m
@@ -31,14 +35,21 @@ for sol_file in sol_files
     regex = r"n_(\d+)"
     match_list = match(regex, sol_file)
     n = parse(Int, match_list.captures[1])
-    push!(solutions[n], sol_file)
+
+    regex = r"d_(\d+)"
+    match_list = match(regex, sol_file)
+    d = parse(Int, match_list.captures[1])
+    push!(solutions[n][d], sol_file)
 end
 
 mat_files_grouped = Dict()
 
 # Creates a list to store the experiment matrice files by value of m
 for n in n_values
-    mat_files_grouped[n] = []
+    mat_files_grouped[n] = Dict()
+    for d in d_values
+        mat_files_grouped[n][d] = []
+    end
 end
 
 # Stores the experiment matrice files by value of m
@@ -46,7 +57,11 @@ for mat_file in mat_files
     regex = r"n(\d+)"
     match_list = match(regex, mat_file)
     n = parse(Int, match_list.captures[1])
-    push!(mat_files_grouped[n], mat_file)
+
+    regex = r"d(\d+)"
+    match_list = match(regex, mat_file)
+    d = parse(Int, match_list.captures[1])
+    push!(mat_files_grouped[n][d], mat_file)
 end
 
 stats = Dict()
@@ -54,104 +69,124 @@ stats_list = ["A_norm_0", "AMP_norm_0", "AMP_norm_1", "hatAMP_norm_0", "hatAMP_n
 
 for n in n_values
     stats[n] = Dict()
-    for stat in stats_list
-        stats[n][stat] = 0
+    for d in d_values
+        stats[n][d] = Dict()
+        for stat in stats_list
+            stats[n][d][stat] = 0
+        end
     end
 end
 
 for n in n_values
-    if length(solutions[n]) < 5
-        for stat in stats_list
-            stats[n][stat] = -1.0
+    for d in d_values
+        if length(solutions[n][d]) < 5
+            for stat in stats_list
+                stats[n][d][stat] = -1.0
+            end
+            continue
         end
-        continue
-    end
-    A_norm_0_sum = 0
-    AMP_norm_0_sum = 0
-    AMP_norm_1_sum = 0
-    hatAMP_norm_0_sum = 0
-    hatAMP_norm_1_sum = 0
+        A_norm_0_sum = 0
+        AMP_norm_0_sum = 0
+        AMP_norm_1_sum = 0
+        hatAMP_norm_0_sum = 0
+        hatAMP_norm_1_sum = 0
 
-    H_norm_0_sum = 0
-    H_norm_1_sum = 0
-    H_rank_sum = 0
-    H_time_sum = 0
-    for i in 1:5
-        mat_file = mat_files_grouped[n][i]
-        mat_path = joinpath(matrices_folder, mat_file)
-        mat_data = matread(mat_path)
-        A = mat_data["matrix"]
-        A = Matrix(A)
-        A_norm_0 = matrix_norm_0(A)
-        AMP = pinv(A)
-        AMP_norm_0 = matrix_norm_0(AMP)
-        AMP_norm_1 = norm(AMP, 1)
-        AMP_rank = calculate_rank(AMP)
-        hatA = A' * A
-        hatAMP = pinv(hatA)
-        hatAMP_norm_0 = matrix_norm_0(hatAMP)
-        hatAMP_norm_1 = norm(hatAMP, 1)
+        H_norm_0_sum = 0
+        H_norm_1_sum = 0
+        H_rank_sum = 0
+        H_time_sum = 0
+        for i in 1:5
+            mat_file = mat_files_grouped[n][d][i]
+            mat_path = joinpath(matrices_folder, mat_file)
+            mat_data = matread(mat_path)
+            A = mat_data["matrix"]
+            A = Matrix(A)
+            A_norm_0 = matrix_norm_0(A)
+            AMP = pinv(A)
+            AMP_norm_0 = matrix_norm_0(AMP)
+            AMP_norm_1 = norm(AMP, 1)
+            AMP_rank = calculate_rank(AMP)
+            hatA = A' * A
+            hatAMP = pinv(hatA)
+            hatAMP_norm_0 = matrix_norm_0(hatAMP)
+            hatAMP_norm_1 = norm(hatAMP, 1)
 
-        sol_file = solutions[n][i]
-        sol_path = joinpath(solutions_folder, sol_file)
-        sol_data = matread(sol_path)
-        H = sol_data["H"]
-        H = Matrix(H)
-        H_norm_0 = matrix_norm_0(H)
-        H_norm_1 = norm(H, 1)
-        H_rank = calculate_rank(H)
-        H_time = sol_data["time"]
+            sol_file = solutions[n][d][i]
+            sol_path = joinpath(solutions_folder, sol_file)
+            sol_data = matread(sol_path)
+            H = sol_data["H"]
+            H = Matrix(H)
+            H_norm_0 = matrix_norm_0(H)
+            H_norm_1 = norm(H, 1)
+            H_rank = calculate_rank(H)
+            H_time = sol_data["time"]
 
-        A_norm_0_sum += A_norm_0
-        AMP_norm_0_sum += AMP_norm_0
-        AMP_norm_1_sum += AMP_norm_1
-        hatAMP_norm_0_sum += hatAMP_norm_0
-        hatAMP_norm_1_sum += hatAMP_norm_1
+            A_norm_0_sum += A_norm_0
+            AMP_norm_0_sum += AMP_norm_0
+            AMP_norm_1_sum += AMP_norm_1
+            hatAMP_norm_0_sum += hatAMP_norm_0
+            hatAMP_norm_1_sum += hatAMP_norm_1
 
-        H_norm_0_sum += H_norm_0
-        H_norm_1_sum += H_norm_1
-        H_rank_sum += H_rank
-        H_time_sum += H_time
-    end
-    stats[n]["A_norm_0"] = A_norm_0_sum / 5
-    stats[n]["AMP_norm_0"] = AMP_norm_0_sum / 5
-    stats[n]["AMP_norm_1"] = AMP_norm_1_sum / 5
-    stats[n]["hatAMP_norm_0"] = hatAMP_norm_0_sum / 5
-    stats[n]["hatAMP_norm_1"] = hatAMP_norm_1_sum / 5
+            H_norm_0_sum += H_norm_0
+            H_norm_1_sum += H_norm_1
+            H_rank_sum += H_rank
+            H_time_sum += H_time
+        end
+        stats[n][d]["A_norm_0"] = A_norm_0_sum / 5
+        stats[n][d]["AMP_norm_0"] = AMP_norm_0_sum / 5
+        stats[n][d]["AMP_norm_1"] = AMP_norm_1_sum / 5
+        stats[n][d]["hatAMP_norm_0"] = hatAMP_norm_0_sum / 5
+        stats[n][d]["hatAMP_norm_1"] = hatAMP_norm_1_sum / 5
 
-    stats[n]["norm_0"] = H_norm_0_sum / 5
-    stats[n]["norm_1"] = H_norm_1_sum / 5
-    stats[n]["rank"] = H_rank_sum / 5
-    stats[n]["time"] = H_time_sum / 5
-end
-
-rows = Dict{Int, Dict{String, Any}}()  # Usamos um dicionário para agrupar por instância
-
-for (n, stats_vals) in stats
-    # Verifica se a instância já existe no dicionário
-    if !haskey(rows, n)
-        # Se não existir, cria uma nova entrada
-        rows[n] = Dict("m" => 120, "n" => n, "r" => round(n * 3/4))
-    end
-    
-    # Adiciona os stats do problema atual na linha correspondente
-    for (stat_name, stat_val) in stats_vals
-        rows[n]["$(stat_name)"] = stat_val
+        stats[n][d]["norm_0"] = H_norm_0_sum / 5
+        stats[n][d]["norm_1"] = H_norm_1_sum / 5
+        stats[n][d]["rank"] = H_rank_sum / 5
+        stats[n][d]["time"] = H_time_sum / 5
     end
 end
 
-df = DataFrame(values(rows))
+rows = Dict{Int, Dict{Int, Dict{String, Any}}}()  # Usamos um dicionário para agrupar por instância
+
+for (n, density_maps) in stats
+    for (d, stats_vals) in density_maps
+        # Verifica se a instância já existe no dicionário
+        if !haskey(rows, n)
+            # Se não existir, cria uma nova entrada
+            rows[n] = Dict()
+        end
+        if !haskey(rows[n], d)
+            # Se não existir, cria uma nova entrada
+            rows[n][d] = Dict("m" => 120, "n" => n, "r" => round(n * 3/4), "d" => d)
+        end
+        
+        # Adiciona os stats do problema atual na linha correspondente
+        for (stat_name, stat_val) in stats_vals
+            rows[n][d]["$(stat_name)"] = stat_val
+        end
+    end
+end
+
+# Transformar o dicionário aninhado em uma lista de dicionários para o DataFrame
+data = []
+for (n, density_dict) in rows
+    for (d, row_dict) in density_dict
+        push!(data, row_dict)
+    end
+end
+
+# Criar o DataFrame a partir da lista de dicionários
+df = DataFrame(data)
 
 # println(names(df))
 
 # Order dataframe by the column n
-sort!(df, :n)
+sort!(df, [:n, :d])
 
 # Creates a list of columns from the lists problem and stats_list
 dynamic_columns = [Symbol(stat) for stat in stats_list]
 
 # Adds the fixed columns
-fixed_columns = [:m, :n, :r]
+fixed_columns = [:m, :n, :r, :d]
 all_columns = vcat(fixed_columns, dynamic_columns)
 
 # Reorders dataframe
