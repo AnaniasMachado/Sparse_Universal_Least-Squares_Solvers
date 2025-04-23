@@ -215,7 +215,7 @@ function dual_variable(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64
         # else
         #     throw(ErrorException("Model was not optimized successfully. Status: $status"))
         # end
-        L = proj_data.RMP' * (1 / lambda) * (X - V) * proj_data.SMP'
+        L = proj_data.RMP' * (1 / lambda) * (V - X) * proj_data.SMP'
         return L
     end
 end
@@ -294,24 +294,22 @@ end
 #     return Xh, k
 # end
 
-function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Float64, problem::String, fixed_tol::Bool, eps_opt::Float64)
+function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Float64, problem::String, fixed_tol::Bool, eps_opt::Float64, stop_crit::String, time_limit::Int64)
     # Initial data
     m, n = size(A)
     Xh = zeros(n, m)
+    X = zeros(n, m)
     # V = rand(n, m)
     # V = pinv(A)
     # V = generalized_inverse(A)
     # Projection data
     proj_data = get_proj_data(A , problem)
-    c_F = 0.0
-    if problem == "P123"
-        c_F = norm(A')
-    end
     V = proj_data.AMP
     initial_pri_res = primal_residual_matrix(A, Xh, proj_data, problem)
     initial_dual_res = dual_res = dual_residual_matrix(A, Xh, V, lambda, proj_data, problem)
     r0 = norm(hcat(initial_pri_res, initial_dual_res))
     eps_tol = eps_abs + eps_rel * r0
+    start_time = time()
     k = 0
     while true
         k += 1
@@ -331,23 +329,40 @@ function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Flo
             pri_res = primal_residual(A, Xh, proj_data, problem)
             dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
             if (pri_res <= eps_opt) && (dual_res <= eps_opt)
-                println("DRS Convergence: k=$k")
+                # println("DRS Convergence: k=$k")
+                # println("rp: $pri_res")
+                # println("rd: $dual_res")
                 break
             end
             # println("Iteration k: $k")
             # println("Primal residual: $pri_res")
             # println("Dual residual: $dual_res")
-        else
+        elseif !fixed_tol && (stop_crit == "Boyd")
             pri_res = primal_residual_matrix(A, Xh, proj_data, problem)
             dual_res = dual_residual_matrix(A, Xh, V, lambda, proj_data, problem)
             res = hcat(pri_res, dual_res)
             if norm(res) <= eps_tol
-                println("DRS Convergence: k=$k")
+                # println("DRS Convergence: k=$k")
+                # println("rp: $(norm(pri_res))")
+                # println("rd: $(norm(dual_res))")
+                break
+            end
+        elseif !fixed_tol && (stop_crit == "Fixed_Point")
+            res = norm(X - Xh)
+            if norm(res) <= eps_tol
+                # println("DRS Convergence: k=$k")
+                # println("res: $res")
                 break
             end
         end
+        # Checks time limit
+        elapsed_time = time() - start_time
+        if elapsed_time > time_limit
+            println("TimeLimit: DRS exceed time limit to solve the problem.")
+            return "-", k
+        end
     end
-    return Xh, k
+    return X, k
 end
 
 function drs_fpi(A::Matrix{Float64}, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)

@@ -66,10 +66,14 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
             primal_upper_bound = eps_abs * sqrt(m*n) + eps_rel * maximum(matrix_norms)
             dual_upper_bound = eps_abs * sqrt((n-r)*r) + eps_rel * rho * norm(V2' * Lambda * U1)
             if (rk_F <= primal_upper_bound) && (sk_F <= dual_upper_bound)
+                # println("ADMM primal residual: $rk_F")
+                # println("ADMM dual residual: $sk_F")
                 break
             end
         else
             if (rk_F <= eps_opt) && (sk_F <= eps_opt)
+                # println("ADMM primal residual: $rk_F")
+                # println("ADMM dual residual: $sk_F")
                 break
             end
         end
@@ -79,10 +83,10 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
         elapsed_time = time() - start_time
         if elapsed_time > time_limit
             println("TimeLimit: ADMM exceed time limit to solve the problem.")
-            return "-"
+            return "-", k
         end
     end
-    return H
+    return H, k
 end
 
 function admm_p134(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::Float64, fixed_tol::Bool, eps_opt::Float64, time_limit::Int64)

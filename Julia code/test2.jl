@@ -72,17 +72,18 @@ end
 DRS_H_norm_0 = matrix_norm_0(DRS_H)
 DRS_H_norm_1 = norm(DRS_H, 1)
 
-# if problem == "PLS"
-#     if norm(A' * A * DRS_H - A') > 10^(-5)
-#         throw(ErrorException("Failed Infeasibility Check."))
-#     end
-# elseif problem == "P123"
-#     println("PLS violation: $(norm(A' * A * DRS_H - A'))")
-#     println("P123 violation: $(norm(DRS_H * A * pinv(A) - DRS_H))")
-#     if norm(A' * DRS_H' * A' + DRS_H * A * pinv(A) - A' - DRS_H) > 10^(-5)
-#         throw(ErrorException("Failed Infeasibility Check."))
-#     end
-# end
+if problem == "PLS"
+    println("PLS violation: $(norm(A' * A * DRS_H - A'))")
+    # if norm(A' * A * DRS_H - A') > 10^(-5)
+    #     throw(ErrorException("Failed Infeasibility Check."))
+    # end
+elseif problem == "P123"
+    println("PLS violation: $(norm(A' * A * DRS_H - A'))")
+    println("P123 violation: $(norm(DRS_H * A * pinv(A) - DRS_H))")
+    # if norm(A' * DRS_H' * A' + DRS_H * A * pinv(A) - A' - DRS_H) > 10^(-5)
+    #     throw(ErrorException("Failed Infeasibility Check."))
+    # end
+end
 
 # A2DRS_TR_time = @elapsed begin
 #     A2DRS_TR_H, A2DRS_TR_k = a2drs_tr(A, lambda, problem, eps_opt)
@@ -102,11 +103,11 @@ DRS_H_norm_1 = norm(DRS_H, 1)
 # A2DRS_ATM_H_norm_0 = matrix_norm_0(A2DRS_ATM_H)
 # A2DRS_ATM_H_norm_1 = norm(A2DRS_ATM_H, 1)
 
-A2DRS_Basic_time = @elapsed begin
-    A2DRS_Basic_H, A2DRS_Basic_k = a2drs_basic(A, lambda, problem, eps_opt)
-end
-A2DRS_Basic_H_norm_0 = matrix_norm_0(A2DRS_Basic_H)
-A2DRS_Basic_H_norm_1 = norm(A2DRS_Basic_H, 1)
+# A2DRS_Basic_time = @elapsed begin
+#     A2DRS_Basic_H, A2DRS_Basic_k = a2drs_basic(A, lambda, problem, eps_opt)
+# end
+# A2DRS_Basic_H_norm_0 = matrix_norm_0(A2DRS_Basic_H)
+# A2DRS_Basic_H_norm_1 = norm(A2DRS_Basic_H, 1)
 
 # A2DRS_Basic_SG_time = @elapsed begin
 #     A2DRS_Basic_SG_H, A2DRS_Basic_SG_k = a2drs_basic_sg(A, lambda, problem, eps_opt)
@@ -173,9 +174,9 @@ println("DRS norm 1: $DRS_H_norm_1")
 # println("A2DRS_ATM time: $A2DRS_ATM_time")
 # println("A2DRS_ATM norm 1: $A2DRS_ATM_H_norm_1")
 
-println("A2DRS_Basic time: $A2DRS_Basic_time")
-println("A2DRS_Basic k: $A2DRS_Basic_k")
-println("A2DRS_Basic norm 1: $A2DRS_Basic_H_norm_1")
+# println("A2DRS_Basic time: $A2DRS_Basic_time")
+# println("A2DRS_Basic k: $A2DRS_Basic_k")
+# println("A2DRS_Basic norm 1: $A2DRS_Basic_H_norm_1")
 
 # println("A2DRS_Basic_SG time: $A2DRS_Basic_SG_time")
 # println("A2DRS_Basic_SG k: $A2DRS_Basic_SG_k")
