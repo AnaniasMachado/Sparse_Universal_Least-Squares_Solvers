@@ -36,7 +36,7 @@ struct DRSProjDataSimple
     RMP::Matrix{Float64}
     SMP::Matrix{Float64}
     T_factor::Matrix{Float64}
-    U::Matrix{Float64}
+    AMP::Matrix{Float64}
 end
 
 struct DRSProjDataP123

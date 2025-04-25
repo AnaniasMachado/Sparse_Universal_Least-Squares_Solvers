@@ -90,9 +90,8 @@ function get_proj_data(A::Matrix{Float64}, problem::String)
         T = A
         RMP = AMP
         SMP = AMP
-        T_factor = 2 * (RMP' * RMP * T * SMP * SMP')
-        U = kron(SMP * S, R * RMP)
-        proj_data = DRSProjDataSimple(R, S, T, RMP, SMP, T_factor, U)
+        T_factor = RMP * T * SMP
+        proj_data = DRSProjDataSimple(R, S, T, RMP, SMP, T_factor, AMP)
         return proj_data
     elseif problem == "PLS"
         R = A' * A
@@ -100,9 +99,9 @@ function get_proj_data(A::Matrix{Float64}, problem::String)
         T = A'
         RMP = pinv(R)
         SMP = I(m)
-        T_factor = 2 * (RMP' * RMP * T)
-        U = kron(I(m), R * RMP)
-        proj_data = DRSProjDataSimple(R, S, T, RMP, SMP, T_factor, U)
+        T_factor = RMP * T
+        AMP = RMP * A'
+        proj_data = DRSProjDataSimple(R, S, T, RMP, SMP, T_factor, AMP)
         return proj_data
     elseif problem == "P123"
         AMP = pinv(A)
@@ -131,13 +130,7 @@ function projection(A::Matrix{Float64}, X::Matrix{Float64}, proj_data::Union{DRS
         Y = proj_data.AMP - Z + X * A * proj_data.AMP
         return Y
     else
-        m, n = size(proj_data.T)
-        Z = 2 * (proj_data.RMP' * X * proj_data.SMP') - proj_data.T_factor
-        # z = vec(Z)
-        # l = proj_data.U * z
-        # L = reshape(l, m, n)
-        L = proj_data.R * proj_data.RMP * Z * proj_data.SMP * proj_data.S
-        Y = X - 0.5 * proj_data.R' * L * proj_data.S'
+        Y = X - proj_data.RMP * proj_data.R * X * proj_data.S * proj_data.SMP + proj_data.T_factor
         return Y
     end
 end
@@ -148,74 +141,28 @@ function primal_residual(A::Matrix, V::Matrix, proj_data::Union{DRSProjDataSimpl
     elseif problem == "PLS"
         return norm(A' * A * V - A')
     elseif problem == "P123"
-        # return norm(A' * A * V - A') + norm(V * A * proj_data.AMP - V)
         return norm(A' * V' * A' + V * A * proj_data.AMP - A' - V)
     end
 end
 
 function primal_residual_matrix(A::Matrix, V::Matrix, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
     if problem == "P1"
-        return norm(A * V * A - A)
+        return A * V * A - A
     elseif problem == "PLS"
-        return norm(A' * A * V - A')
+        return A' * A * V - A'
     elseif problem == "P123"
-        # return norm(A' * A * V - A') + norm(V * A * proj_data.AMP - V)
         return A' * V' * A' + V * A * proj_data.AMP - A' - V
     end
 end
 
 function dual_variable(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64}, lambda::Float64, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
     if problem == "P123"
-        # m, n = size(A)
-
-        # model = Model(Gurobi.Optimizer)
-
-        # @variable(model, L[1:n, 1:m])
-        # @variable(model, G[1:n, 1:m])
-
-        # B = (1 / lambda) * (X - V)
-        # C = A' * A * L + proj_data.AMP * A * G - G
-        # @objective(model, Min, sum((C[i, j] - B[i ,j])^2 for i in 1:size(B, 1) for j in 1:size(B, 2)))
-
-        # set_optimizer_attribute(model, "LogToConsole", 0)
-
-        # optimize!(model)
-
-        # status = termination_status(model)
-        # if status == MOI.OPTIMAL
-        #     L_star = [value(L[i, j]) for i in 1:n, j in 1:m]
-        #     G_star = [value(G[i, j]) for i in 1:n, j in 1:m]
-        #     return L_star, G_star
-        # else
-        #     throw(ErrorException("Model was not optimized successfully. Status: $status"))
-        # end
         B = (1 / lambda) * (X - V)
         L = proj_data.AMP * proj_data.AMP' * B * A * proj_data.AMP
         G = B * A * proj_data.AMP - B
         return L, G
     else
-        # m, n = size(proj_data.T)
-
-        # model = Model(Gurobi.Optimizer)
-
-        # @variable(model, L[1:m, 1:n])
-
-        # B = (1 / lambda) * (X - V)
-        # C = proj_data.R' * L * proj_data.S'
-        # @objective(model, Min, sum((C[i, j] - B[i ,j])^2 for i in 1:size(B, 1) for j in 1:size(B, 2)))
-
-        # set_optimizer_attribute(model, "LogToConsole", 0)
-
-        # optimize!(model)
-
-        # status = termination_status(model)
-        # if status == MOI.OPTIMAL
-        #     L_star = [value(L[i, j]) for i in 1:m, j in 1:n]
-        #     return L_star
-        # else
-        #     throw(ErrorException("Model was not optimized successfully. Status: $status"))
-        # end
-        L = proj_data.RMP' * (1 / lambda) * (V - X) * proj_data.SMP'
+        L = proj_data.RMP' * (1 / lambda) * (X - V) * proj_data.SMP'
         return L
     end
 end
@@ -236,7 +183,7 @@ function dual_residual_matrix(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{
         return (1 / lambda) * (V - X) + A' * A * Lambda + Gamma * A * proj_data.AMP - Gamma
     else
         Lambda = dual_variable(A, X, V, lambda, proj_data, problem)
-        return norm((1 / lambda) * (V - X) + proj_data.R' * Lambda * proj_data.S')
+        return (1 / lambda) * (V - X) + proj_data.R' * Lambda * proj_data.S'
     end
 end
 

@@ -26,7 +26,7 @@ method = methods[1]
 epsilon = 10^(-5)
 eps_abs = epsilon
 eps_rel = epsilon
-fixed_tol = false
+fixed_tol = true
 eps_opt = epsilon
 time_limit = 1200
 
