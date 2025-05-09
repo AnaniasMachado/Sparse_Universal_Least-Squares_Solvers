@@ -23,7 +23,7 @@ method = methods[1]
 
 # Gurobi parameters
 opt_tol = 10^(-5)
-time_limit = 1200
+time_limit = 1800
 
 df = DataFrame()
 
@@ -37,9 +37,15 @@ PMN_H_norm_1_list = []
 PMN_H_rank_list = []
 PMN_time_list = []
 
+PMX_H_norm_0_list = []
+PMX_H_norm_1_list = []
+PMX_H_rank_list = []
+PMX_time_list = []
+
 count = 0
 min_PLS_unsolvable_m = Inf
 min_PMN_unsolvable_m = Inf
+min_PMX_unsolvable_m = Inf
 
 for mat_file in mat_files
     global count += 1
@@ -140,7 +146,42 @@ for mat_file in mat_files
 
         GC.gc()
 
-        if count % 5 == 0
+        constraints = ["PMX"]
+
+        GRB_PMX_time = "-"
+        GRB_PMX_H_norm_0 = -1.0
+        GRB_PMX_H_norm_1 = -1.0
+        GRB_PMX_H_rank = -1
+        if !("-" in PMX_time_list) && (m < min_PMX_unsolvable_m)
+            try
+                GRB_PMX_time = @elapsed begin
+                    GRB_PMX_H = gurobi_solver(data, constraints, opt_tol, time_limit)
+                end
+                GRB_PMX_H_norm_0 = matrix_norm_0(GRB_PMX_H)
+                GRB_PMX_H_norm_1 = norm(GRB_PMX_H, 1)
+                GRB_PMX_H_rank = calculate_rank(GRB_PMX_H)
+
+                solution_filename = "Gurobi/Experiment_$(exp)_PMX_m_$(m)_n_$(n)_idx_$(idx)"
+                solution_filepath = joinpath(solutions_folder, solution_filename)
+                matwrite(solution_filepath, Dict("H" => GRB_PMX_H, "time" => GRB_PMX_time))
+            catch e
+                if isa(e, ErrorException)
+                    GRB_PMX_time = "-"
+                    global min_PMX_unsolvable_m = min(m, min_PMX_unsolvable_m)
+                else
+                    throw(ErrorException("Gurobi failed to solve problem something unexpected.", e))
+                end
+            end
+        end
+
+        push!(PMX_H_norm_0_list, GRB_PMX_H_norm_0 / AMP_norm_0)
+        push!(PMX_H_norm_1_list, GRB_PMX_H_norm_1 / AMP_norm_1)
+        push!(PMX_H_rank_list, GRB_PMX_H_rank / r)
+        push!(PMX_time_list, GRB_PMX_time)
+
+        GC.gc()
+
+        if count % 3 == 0
             GRB_PLS_H_norm_0_mean = -1.0
             GRB_PLS_H_norm_1_mean = -1.0
             GRB_PLS_H_rank_mean = -1.0
@@ -165,6 +206,18 @@ for mat_file in mat_files
                 GRB_PMN_time_mean = mean(PMN_time_list)
             end
 
+            GRB_PMX_H_norm_0_mean = -1.0
+            GRB_PMX_H_norm_1_mean = -1.0
+            GRB_PMX_H_rank_mean = -1.0
+            GRB_PMX_time_mean = -1.0
+
+            if !("-" in PMX_time_list)
+                GRB_PMX_H_norm_0_mean = mean(PMX_H_norm_0_list)
+                GRB_PMX_H_norm_1_mean = mean(PMX_H_norm_1_list)
+                GRB_PMX_H_rank_mean = mean(PMX_H_rank_list)
+                GRB_PMX_time_mean = mean(PMX_time_list)
+            end
+
             result = DataFrame(
                 m = [m],
                 r = [r],
@@ -175,7 +228,11 @@ for mat_file in mat_files
                 GRB_PMN_H_norm_0_mean = [GRB_PMN_H_norm_0_mean],
                 GRB_PMN_H_norm_1_mean = [GRB_PMN_H_norm_1_mean],
                 GRB_PMN_H_rank_mean = [GRB_PMN_H_rank_mean],
-                GRB_PMN_time_mean = [GRB_PMN_time_mean]
+                GRB_PMN_time_mean = [GRB_PMN_time_mean],
+                GRB_PMX_H_norm_0_mean = [GRB_PMX_H_norm_0_mean],
+                GRB_PMX_H_norm_1_mean = [GRB_PMX_H_norm_1_mean],
+                GRB_PMX_H_rank_mean = [GRB_PMX_H_rank_mean],
+                GRB_PMX_time_mean = [GRB_PMX_time_mean]
             )
 
             append!(df, result)
@@ -189,6 +246,11 @@ for mat_file in mat_files
             empty!(PMN_H_norm_1_list)
             empty!(PMN_H_rank_list)
             empty!(PMN_time_list)
+
+            empty!(PMX_H_norm_0_list)
+            empty!(PMX_H_norm_1_list)
+            empty!(PMX_H_rank_list)
+            empty!(PMX_time_list)
         end
 
         GC.gc()
