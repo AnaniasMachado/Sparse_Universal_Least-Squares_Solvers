@@ -59,28 +59,6 @@ function gurobi_projection(V::Matrix{Float64}, proj_data::Union{DRSProjDataSimpl
     end
 end
 
-# function get_proj_data(A::Matrix{Float64}, problem::String)
-#     m, n = size(A)
-#     AMP = pinv(A)
-#     if problem == "P1"
-#         R = A
-#         S = A
-#         T = A
-#         println("Point 6")
-#         RMTSM = AMP
-#         SSMP = A * AMP
-#         RMPR = AMP * A
-#         println("Point 7")
-#         V = 2 * (I(m * n) - kron(SSMP, RMPR))
-#         println("Point 8")
-#         VG = generalized_inverse(V)
-#         println("Point 9")
-#         proj_data = DRSProjData(R, S, T, RMTSM, SSMP, RMPR, VG)
-#         println("Point 10")
-#         return proj_data
-#     end
-# end
-
 function get_proj_data(A::Matrix{Float64}, problem::String)
     m, n = size(A)
     if problem == "P1"
@@ -103,31 +81,22 @@ function get_proj_data(A::Matrix{Float64}, problem::String)
         AMP = RMP * A'
         proj_data = DRSProjDataSimple(R, S, T, RMP, SMP, T_factor, AMP)
         return proj_data
-    elseif problem == "P123"
+    elseif (problem in ["P123", "P134"]) 
         AMP = pinv(A)
         proj_data = DRSProjDataP123(AMP)
         return proj_data
     end
 end
 
-# function projection(X::Matrix{Float64}, proj_data::DRSProjData)
-#     Z = 2 * (proj_data.RMPR * X * proj_data.SSMP - X)
-#     z = vec(Z)
-#     w = proj_data.VG * z
-#     W = reshape(w, size(X))
-#     Y = proj_data.RMTSM + W - proj_data.RMPR * W * proj_data.SSMP
-#     return Y
-# end
-
 function projection(A::Matrix{Float64}, X::Matrix{Float64}, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
     if problem == "P123"
-        # L = 2 * proj_data.AMP * (proj_data.AMP' * X - proj_data.AMP' * proj_data.AMP)
-        # Z = 2 * (proj_data.AMP * A * X - X)
-        # G = Z - proj_data.AMP * A * Z
-        # Y = X - 0.5 * (A' * A * L + proj_data.AMP * A * G - G)
-        # return Y
         Z = proj_data.AMP * A * X * A * proj_data.AMP
         Y = proj_data.AMP - Z + X * A * proj_data.AMP
+        return Y
+    
+    elseif problem == "P134"
+        Z = proj_data.AMP * A * X * A * proj_data.AMP
+        Y = X - proj_data.AMP * A * X + proj_data.AMP - X * A * proj_data.AMP + Z
         return Y
     else
         Y = X - proj_data.RMP * proj_data.R * X * proj_data.S * proj_data.SMP + proj_data.T_factor
@@ -142,6 +111,8 @@ function primal_residual(A::Matrix, V::Matrix, proj_data::Union{DRSProjDataSimpl
         return norm(A' * A * V - A')
     elseif problem == "P123"
         return norm(A' * V' * A' + V * A * proj_data.AMP - A' - V)
+    elseif problem == "P134"
+        return norm(A' * A * V + V * A * A' - 2 * A')
     end
 end
 
@@ -152,6 +123,8 @@ function primal_residual_matrix(A::Matrix, V::Matrix, proj_data::Union{DRSProjDa
         return A' * A * V - A'
     elseif problem == "P123"
         return A' * V' * A' + V * A * proj_data.AMP - A' - V
+    elseif problem == "P134"
+        return A' * A * V + V * A * A' - 2 * A'
     end
 end
 
@@ -160,6 +133,11 @@ function dual_variable(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64
         B = (1 / lambda) * (X - V)
         L = proj_data.AMP * proj_data.AMP' * B * A * proj_data.AMP
         G = B * A * proj_data.AMP - B
+        return L, G
+    elseif problem == "P134"
+        B = (1 / lambda) * (X - V)
+        L = proj_data.AMP * proj_data.AMP' * B
+        G = (B - proj_data.AMP * A * B) * proj_data.AMP' * proj_data.AMP
         return L, G
     else
         L = proj_data.RMP' * (1 / lambda) * (X - V) * proj_data.SMP'
@@ -171,6 +149,9 @@ function dual_residual(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64
     if problem == "P123"
         Lambda, Gamma = dual_variable(A, X, V, lambda, proj_data, problem)
         return norm((1 / lambda) * (V - X) + A' * A * Lambda + Gamma * A * proj_data.AMP - Gamma)
+    elseif problem == "P134"
+        Lambda, Gamma = dual_variable(A, X, V, lambda, proj_data, problem)
+        return norm((1 / lambda) * (V - X) + A' * A * Lambda + Gamma * A * A')
     else
         Lambda = dual_variable(A, X, V, lambda, proj_data, problem)
         return norm((1 / lambda) * (V - X) + proj_data.R' * Lambda * proj_data.S')
@@ -181,6 +162,9 @@ function dual_residual_matrix(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{
     if problem == "P123"
         Lambda, Gamma = dual_variable(A, X, V, lambda, proj_data, problem)
         return (1 / lambda) * (V - X) + A' * A * Lambda + Gamma * A * proj_data.AMP - Gamma
+    elseif problem == "P134"
+        Lambda, Gamma = dual_variable(A, X, V, lambda, proj_data, problem)
+        return (1 / lambda) * (V - X) + A' * A * Lambda + Gamma * A * A'
     else
         Lambda = dual_variable(A, X, V, lambda, proj_data, problem)
         return (1 / lambda) * (V - X) + proj_data.R' * Lambda * proj_data.S'
@@ -193,9 +177,9 @@ function is_feasible(A::Matrix{Float64}, X::Matrix{Float64}, proj_data::Union{DR
     elseif problem == "PLS"
         return norm(A' * A * X - A') < 10^(-5)
     elseif problem == "P123"
-        # println("PLS violation: $(norm(A' * A * X - A'))")
-        # println("P123 violation: $(norm(X * A * proj_data.AMP - X))")
         return (norm(A' * A * X - A') < 10^(-5)) && (norm(X * A * proj_data.AMP - X) < 10^(-5))
+    elseif problem == "P134"
+        return (norm(A' * A * X - A') < 10^(-5)) && (norm(X * A * A' - A') < 10^(-5))
     end
 end
 
@@ -294,13 +278,18 @@ function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Flo
                 # println("rd: $(norm(dual_res))")
                 break
             end
+            # println("Iteration k: $k")
+            # println("rp: $(norm(pri_res))")
+            # println("rd: $(norm(dual_res))")
         elseif !fixed_tol && (stop_crit == "Fixed_Point")
             res = norm(X - Xh)
-            if norm(res) <= eps_tol
+            if res <= eps_tol
                 # println("DRS Convergence: k=$k")
                 # println("res: $res")
                 break
             end
+            # println("Iteration k: $k")
+            # println("res: $(res)")
         end
         # Checks time limit
         elapsed_time = time() - start_time

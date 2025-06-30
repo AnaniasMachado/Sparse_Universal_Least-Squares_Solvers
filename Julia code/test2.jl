@@ -37,8 +37,8 @@ A = Matrix(A)
 # A = Matrix(A)
 
 data = DataInst(A, m, n, r)
-constraints = ["PLS"]
-problem = "PLS"
+constraints = ["PLS", "PMN"]
+problem = "P134"
 eps_opt = 10^(-5)
 # lambda = 0.28
 # lambda = 0.000026
