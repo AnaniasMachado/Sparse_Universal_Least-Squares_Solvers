@@ -21,24 +21,25 @@ m = 100
 n = 50
 r = 25
 
-# A = gen_random_rank_r_matrix(m, n, r)
+A = gen_random_rank_r_matrix(m, n, r)
 
-matrix_folder = "./Experiment_Matrices/Testing_ADMM_P123_N1"
-mat_files = readdir(matrix_folder)
-mat_file = mat_files[1]
-mat_path = joinpath(matrix_folder, mat_file)
-mat_data = matread(mat_path)
-A = mat_data["A"]
-A = Matrix(A)
+# matrix_folder = "./Experiment_Matrices/Testing_ADMM_P123_N1"
+# mat_files = readdir(matrix_folder)
+# mat_file = mat_files[1]
+# mat_path = joinpath(matrix_folder, mat_file)
+# mat_data = matread(mat_path)
+# A = mat_data["A"]
+# A = Matrix(A)
+AMP = pinv(A)
 
 # mat_path = "matrixA.mat"
 # mat_data = matread(mat_path)
 # A = mat_data["A"]
 # A = Matrix(A)
 
-data = DataInst(A, m, n, r)
-constraints = ["PLS", "PMN"]
-problem = "P134"
+data = DataInst(A, m, n, r, AMP=AMP)
+constraints = ["PMN", "P124"]
+problem = "P124"
 eps_opt = 10^(-5)
 # lambda = 0.28
 # lambda = 0.000026

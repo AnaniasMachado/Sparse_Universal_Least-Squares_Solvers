@@ -91,24 +91,17 @@ function get_proj_data(A::Matrix{Float64}, problem::String)
         AMP = A' * SMP
         proj_data = DRSProjDataSimple(R, S, T, RMP, SMP, T_factor, AMP)
         return proj_data
-    elseif (problem in ["P123", "P134"]) 
+    elseif (problem in ["P134", "P123", "P124"]) 
         AMP = pinv(A)
         proj_data = DRSProjDataP123(AMP)
         return proj_data
-    elseif problem == "P124"
-        AMP = pinv(A')
-        proj_data = DRSProjDataP123(AMP)
     end
 end
 
 function projection(A::Matrix{Float64}, X::Matrix{Float64}, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
-    if problem == "P123"
+    if problem in ["P123", "P124"]
         Z = proj_data.AMP * A * X * A * proj_data.AMP
         Y = proj_data.AMP - Z + X * A * proj_data.AMP
-        return Y
-    elseif problem == "P124"
-        Z = proj_data.AMP * A' * X * A' * proj_data.AMP
-        Y = proj_data.AMP - Z + X * A' * proj_data.AMP
         return Y
     elseif problem == "P134"
         Z = proj_data.AMP * A * X * A * proj_data.AMP
@@ -127,10 +120,8 @@ function primal_residual(A::Matrix, V::Matrix, proj_data::Union{DRSProjDataSimpl
         return norm(A' * A * V - A')
     elseif problem == "PMN"
         return norm(V * A * A' - A')
-    elseif problem == "P123"
+    elseif problem in ["P123", "P124"]
         return norm(A' * V' * A' + V * A * proj_data.AMP - A' - V)
-    elseif problem == "P124"
-        return norm(A * V' * A + V * A' * proj_data.AMP - A - V)
     elseif problem == "P134"
         return norm(A' * A * V + V * A * A' - 2 * A')
     end
@@ -143,25 +134,18 @@ function primal_residual_matrix(A::Matrix, V::Matrix, proj_data::Union{DRSProjDa
         return A' * A * V - A'
     elseif problem == "PMN"
         return V * A * A' - A'
-    elseif problem == "P123"
+    elseif problem in ["P123", "P124"]
         return A' * V' * A' + V * A * proj_data.AMP - A' - V
-    elseif problem == "P124"
-        return A * V' * A + V * A' * proj_data.AMP - A - V
     elseif problem == "P134"
         return A' * A * V + V * A * A' - 2 * A'
     end
 end
 
 function dual_variable(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64}, lambda::Float64, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
-    if problem == "P123"
+    if problem in ["P123", "P124"]
         B = (1 / lambda) * (X - V)
         L = proj_data.AMP * proj_data.AMP' * B * A * proj_data.AMP
         G = B * A * proj_data.AMP - B
-        return L, G
-    elseif problem == "P124"
-        B = (1 / lambda) * (X - V)
-        L = proj_data.AMP * proj_data.AMP' * B * A' * proj_data.AMP
-        G = B * A' * proj_data.AMP - B
         return L, G
     elseif problem == "P134"
         B = (1 / lambda) * (X - V)
@@ -175,12 +159,9 @@ function dual_variable(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64
 end
 
 function dual_residual(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64}, lambda::Float64, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
-    if problem == "P123"
+    if problem in ["P123", "P124"]
         Lambda, Gamma = dual_variable(A, X, V, lambda, proj_data, problem)
         return norm((1 / lambda) * (V - X) + A' * A * Lambda + Gamma * A * proj_data.AMP - Gamma)
-    elseif problem == "P124"
-        Lambda, Gamma = dual_variable(A, X, V, lambda, proj_data, problem)
-        return norm((1 / lambda) * (V - X) + A * A' * Lambda + Gamma * A' * proj_data.AMP - Gamma)
     elseif problem == "P134"
         Lambda, Gamma = dual_variable(A, X, V, lambda, proj_data, problem)
         return norm((1 / lambda) * (V - X) + A' * A * Lambda + Gamma * A * A')
@@ -191,12 +172,9 @@ function dual_residual(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64
 end
 
 function dual_residual_matrix(A::Matrix{Float64}, X::Matrix{Float64}, V::Matrix{Float64}, lambda::Float64, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
-    if problem == "P123"
+    if problem in ["P123", "P124"]
         Lambda, Gamma = dual_variable(A, X, V, lambda, proj_data, problem)
         return (1 / lambda) * (V - X) + A' * A * Lambda + Gamma * A * proj_data.AMP - Gamma
-    elseif problem == "P124"
-        Lambda, Gamma = dual_variable(A, X, V, lambda, proj_data, problem)
-        return (1 / lambda) * (V - X) + A * A' * Lambda + Gamma * A' * proj_data.AMP - Gamma
     elseif problem == "P134"
         Lambda, Gamma = dual_variable(A, X, V, lambda, proj_data, problem)
         return (1 / lambda) * (V - X) + A' * A * Lambda + Gamma * A * A'
@@ -213,10 +191,8 @@ function is_feasible(A::Matrix{Float64}, X::Matrix{Float64}, proj_data::Union{DR
         return norm(A' * A * X - A') < 10^(-5)
     elseif problem == "PMN"
         return norm(X * A * A' - A') < 10^(-5)
-    elseif problem == "P123"
+    elseif problem in ["P123", "P124"]
         return (norm(A' * A * X - A') < 10^(-5)) && (norm(X * A * proj_data.AMP - X) < 10^(-5))
-    elseif problem == "P124"
-        return (norm(A * A' * X - A) < 10^(-5)) && (norm(X * A' * proj_data.AMP - X) < 10^(-5))
     elseif problem == "P134"
         return (norm(A' * A * X - A') < 10^(-5)) && (norm(X * A * A' - A') < 10^(-5))
     end
@@ -265,6 +241,9 @@ end
 # end
 
 function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Float64, problem::String, fixed_tol::Bool, eps_opt::Float64, stop_crit::String, time_limit::Int64)
+    if problem == "P124"
+        A = Matrix(A')
+    end
     # Initial data
     m, n = size(A)
     Xh = zeros(n, m)
@@ -337,7 +316,11 @@ function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Flo
             return "-", k
         end
     end
-    return X, k
+    if problem == "P124"
+        return Matrix(X'), k
+    else
+        return X, k
+    end
 end
 
 function drs_fpi(A::Matrix{Float64}, proj_data::Union{DRSProjDataSimple, DRSProjDataP123}, problem::String)
