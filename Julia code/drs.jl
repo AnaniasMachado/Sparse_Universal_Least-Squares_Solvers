@@ -8,6 +8,11 @@ function soft_thresholding_matrix(X::Matrix{Float64}, lambda::Float64)
     return sign.(X) .* max.(abs.(X) .- lambda, 0)
 end
 
+function hard_thresholding_matrix(X::Matrix{Float64}, lambda::Float64)
+    t = sqrt(2 * lambda)
+    return ifelse.(abs.(X) .<= t, 0.0, X)
+end
+
 function generalized_inverse(V::Matrix{Float64})
     m, n = size(V)
 
@@ -309,6 +314,59 @@ function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Flo
             # println("Iteration k: $k")
             # println("res: $(res)")
         end
+        # Checks time limit
+        elapsed_time = time() - start_time
+        if elapsed_time > time_limit
+            println("TimeLimit: DRS exceed time limit to solve the problem.")
+            return "-", k
+        end
+    end
+    if problem == "P124"
+        return Matrix(X'), k
+    else
+        return X, k
+    end
+end
+
+function drs_n0(A::Matrix{Float64}, lambda::Float64, problem::String, eps_opt::Float64, stop_crit::String, time_limit::Int64)
+    if problem == "P124"
+        A = Matrix(A')
+    end
+    # Initial data
+    m, n = size(A)
+    Xh = zeros(n, m)
+    X = zeros(n, m)
+    # V = rand(n, m)
+    # V = pinv(A)
+    # V = generalized_inverse(A)
+    # Projection data
+    proj_data = get_proj_data(A , problem)
+    V = proj_data.AMP
+    start_time = time()
+    k = 0
+    while true
+        k += 1
+        Xh = hard_thresholding_matrix(V, lambda)
+        Vh = 2 * Xh - V
+        X = projection(A, Vh, proj_data, problem)
+        # X = gurobi_projection(Vh, proj_data, problem)
+        # if !is_feasible(A, X, proj_data, problem)
+        #     println("Infeasible X.")
+        #     throw(ErrorException("Infeasible X error."))
+        #     break
+        # else
+        #     # println("Feasible X.")
+        # end
+        V += X - Xh
+        res = norm(X - Xh)
+        # if res <= eps_opt
+        if k >= 10000
+            # println("DRS Convergence: k=$k")
+            # println("res: $res")
+            break
+        end
+        println("Iteration k: $k")
+        println("res: $(res)")
         # Checks time limit
         elapsed_time = time() - start_time
         if elapsed_time > time_limit

@@ -25,7 +25,7 @@ end
 
 function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::Float64, fixed_tol::Bool, eps_opt::Float64, time_limit::Int64)
     m, n = size(A)
-    U, S, V = svd(A)
+    U, S, V = svd(A, full=true)
     S = Diagonal(S)
     r = count_singular_values(S)
     D = S[1:r, 1:r]
@@ -83,15 +83,15 @@ function admm_p123(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::
         elapsed_time = time() - start_time
         if elapsed_time > time_limit
             println("TimeLimit: ADMM exceed time limit to solve the problem.")
-            return "-", k
+            return "-"
         end
     end
-    return H, k
+    return H
 end
 
 function admm_p134(A::Matrix{Float64}, rho::Float64, eps_abs::Float64, eps_rel::Float64, fixed_tol::Bool, eps_opt::Float64, time_limit::Int64)
     m, n = size(A)
-    U, S, V = svd(A)
+    U, S, V = svd(A, full=true)
     S = Diagonal(S)
     r = count_singular_values(S)
     D = S[1:r, 1:r]

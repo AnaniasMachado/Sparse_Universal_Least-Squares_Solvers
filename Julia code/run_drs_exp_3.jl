@@ -20,7 +20,7 @@ results_folder = "results/DRS_Experiment_$exp"
 solutions_folder = "./Solutions/DRS_Experiment_" * exp
 
 methods = ["ADMM", "DRS"]
-method = methods[2]
+method = methods[1]
 
 # ADMM parameters
 rho = 3.0
@@ -35,7 +35,7 @@ stop_crit = stop_crits[1]
 epsilon = 10^(-5)
 eps_abs = epsilon
 eps_rel = epsilon
-fixed_tol = true
+fixed_tol = false
 eps_opt = epsilon
 time_limit = 1200
 

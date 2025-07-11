@@ -26,7 +26,7 @@ method = methods[1]
 epsilon = 10^(-5)
 eps_abs = epsilon
 eps_rel = epsilon
-fixed_tol = true
+fixed_tol = false
 eps_opt = epsilon
 time_limit = 1200
 
@@ -86,7 +86,7 @@ for mat_file in mat_files
         ADMM_H_rank = -1.0
         if (m < min_ADMM_unsolvable_m)
             ADMM_time = @elapsed begin
-                ADMM_H, ADMM_k = admm_p123(A, rho, eps_abs, eps_rel, fixed_tol, eps_opt, time_limit)
+                ADMM_H = admm_p123(A, rho, eps_abs, eps_rel, fixed_tol, eps_opt, time_limit)
             end
             if ADMM_H == "-"
                 global min_ADMM_unsolvable_m = min(m, min_ADMM_unsolvable_m)
@@ -98,11 +98,11 @@ for mat_file in mat_files
                 if fixed_tol
                     solution_filename = "ADMMe/Experiment_$(exp)_P123_m_$(m)_n_$(n)_idx_$(idx)"
                     solution_filepath = joinpath(solutions_folder, solution_filename)
-                    matwrite(solution_filepath, Dict("H" => ADMM_H, "time" => ADMM_time, "k" => ADMM_k))
+                    matwrite(solution_filepath, Dict("H" => ADMM_H, "time" => ADMM_time))
                 else
                     solution_filename = "ADMM/Experiment_$(exp)_P123_m_$(m)_n_$(n)_idx_$(idx)"
                     solution_filepath = joinpath(solutions_folder, solution_filename)
-                    matwrite(solution_filepath, Dict("H" => ADMM_H, "time" => ADMM_time, "k" => ADMM_k))
+                    matwrite(solution_filepath, Dict("H" => ADMM_H, "time" => ADMM_time))
                 end
             end
         end
