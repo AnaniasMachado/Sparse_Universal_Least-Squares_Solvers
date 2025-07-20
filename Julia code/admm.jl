@@ -6,16 +6,6 @@ function soft_thresholding_matrix(X::Matrix{Float64}, lambda::Float64)
     return sign.(X) .* max.(abs.(X) .- lambda, 0)
 end
 
-function count_singular_values(S::Diagonal)
-    rank = 0
-    for a in S
-        if abs(a) > epsilon
-            rank += 1
-        end
-    end
-    return rank
-end
-
 function variables_initialization(V1::Matrix{Float64}, U1::Matrix{Float64}, D_inv::Matrix{Float64}, rho::Float64)
     Theta = (V1 * U1') / norm(V1 * U1', Inf)
     Lambda = Theta / rho

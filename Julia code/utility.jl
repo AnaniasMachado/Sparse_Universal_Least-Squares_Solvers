@@ -39,3 +39,13 @@ function calculate_rank(A::Union{Matrix{Float64}, Matrix{Int64}})
     end
     return rank
 end
+
+function count_singular_values(S::Diagonal)
+    rank = 0
+    for a in S
+        if abs(a) > epsilon
+            rank += 1
+        end
+    end
+    return rank
+end

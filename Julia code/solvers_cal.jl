@@ -18,14 +18,14 @@ function gurobi_solver_cal(data::DataInst, problem::String, opt_tol::Float64=10^
 
     if problem == "P134"
         @variable(model, W[1:(data.n-r), 1:(data.m-r)], lower_bound=-Inf, upper_bound=Inf)
-        @variable(model, Z[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
+        @variable(model, T[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
 
         @objective(model, Min, sum(Z[i, j] for i in 1:data.n, j in 1:data.m))
 
         G = V1 * D_inv * U1'
         H = G + V2 * W * U2'
-        @constraint(model, Z - H .>= null_matrix, base_name = "Z_minus_H_")
-        @constraint(model, Z + H .>= null_matrix, base_name = "Z_plus_H_")
+        @constraint(model, T - H .>= null_matrix, base_name = "T_minus_H_")
+        @constraint(model, T + H .>= null_matrix, base_name = "T_plus_H_")
 
         set_attribute(model, "BarConvTol", 1e-5)
         set_attribute(model, "FeasibilityTol", 1e-5)
@@ -45,6 +45,74 @@ function gurobi_solver_cal(data::DataInst, problem::String, opt_tol::Float64=10^
         if status == MOI.OPTIMAL
             W_star = [value(W[i, j]) for i in 1:(data.n-r), j in 1:(data.m-r)]
             H_star = G + V2 * W_star * U2'
+            return H_star
+        else
+            throw(ErrorException("Model was not optimized successfully. Status Code: $status"))
+        end
+    elseif problem == "P13"
+        @variable(model, Z[1:(data.n-r), 1:r], lower_bound=-Inf, upper_bound=Inf)
+        @variable(model, W[1:(data.n-r), 1:(data.m-r)], lower_bound=-Inf, upper_bound=Inf)
+        @variable(model, T[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
+
+        @objective(model, Min, sum(T[i, j] for i in 1:data.n, j in 1:data.m))
+
+        G = V1 * D_inv * U1'
+        H = G + V2 * W * U2' + V2 * Z * U1'
+        @constraint(model, T - H .>= null_matrix, base_name = "T_minus_H_")
+        @constraint(model, T + H .>= null_matrix, base_name = "T_plus_H_")
+
+        set_attribute(model, "BarConvTol", 1e-5)
+        set_attribute(model, "FeasibilityTol", 1e-5)
+        set_attribute(model, "OptimalityTol", opt_tol)
+
+        # set_attribute(inst.model, "DualReductions", 0)
+
+        set_optimizer_attribute(model, "TimeLimit", time_limit)
+
+        set_optimizer_attribute(model, "LogToConsole", 0)
+
+        # set_optimizer_attribute(inst.model, "LogFile", "gurobi_log.txt")
+
+        optimize!(model)
+
+        status = termination_status(model)
+        if status == MOI.OPTIMAL
+            Z_star = [value(Z[i, j]) for i in 1:(data.n-r), j in 1:r]
+            W_star = [value(W[i, j]) for i in 1:(data.n-r), j in 1:(data.m-r)]
+            H_star = G + V2 * W_star * U2' + V2 * Z_star * U1'
+            return H_star
+        else
+            throw(ErrorException("Model was not optimized successfully. Status Code: $status"))
+        end
+    elseif problem == "P123"
+        @variable(model, Z[1:(data.n-r), 1:r], lower_bound=-Inf, upper_bound=Inf)
+        @variable(model, T[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
+
+        @objective(model, Min, sum(T[i, j] for i in 1:data.n, j in 1:data.m))
+
+        G = V1 * D_inv * U1'
+        H = G + V2 * Z * U1'
+        @constraint(model, T - H .>= null_matrix, base_name = "T_minus_H_")
+        @constraint(model, T + H .>= null_matrix, base_name = "T_plus_H_")
+
+        set_attribute(model, "BarConvTol", 1e-5)
+        set_attribute(model, "FeasibilityTol", 1e-5)
+        set_attribute(model, "OptimalityTol", opt_tol)
+
+        # set_attribute(inst.model, "DualReductions", 0)
+
+        set_optimizer_attribute(model, "TimeLimit", time_limit)
+
+        set_optimizer_attribute(model, "LogToConsole", 0)
+
+        # set_optimizer_attribute(inst.model, "LogFile", "gurobi_log.txt")
+
+        optimize!(model)
+
+        status = termination_status(model)
+        if status == MOI.OPTIMAL
+            Z_star = [value(Z[i, j]) for i in 1:(data.n-r), j in 1:r]
+            H_star = G + V2 * Z_star * U1'
             return H_star
         else
             throw(ErrorException("Model was not optimized successfully. Status Code: $status"))

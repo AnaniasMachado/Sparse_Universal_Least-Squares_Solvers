@@ -22,15 +22,15 @@ m = 100
 n = 50
 r = 25
 
-# A = gen_random_rank_r_matrix(m, n, r)
+A = gen_random_rank_r_matrix(m, n, r)
 
-matrix_folder = "./Experiment_Matrices/Testing_ADMM_P123_N1"
-mat_files = readdir(matrix_folder)
-mat_file = mat_files[1]
-mat_path = joinpath(matrix_folder, mat_file)
-mat_data = matread(mat_path)
-A = mat_data["A"]
-A = Matrix(A)
+# matrix_folder = "./Experiment_Matrices/Testing_ADMM_P123_N1"
+# mat_files = readdir(matrix_folder)
+# mat_file = mat_files[1]
+# mat_path = joinpath(matrix_folder, mat_file)
+# mat_data = matread(mat_path)
+# A = mat_data["A"]
+# A = Matrix(A)
 AMP = pinv(A)
 
 # mat_path = "matrixA.mat"
@@ -39,8 +39,8 @@ AMP = pinv(A)
 # A = Matrix(A)
 
 data = DataInst(A, m, n, r, AMP=AMP)
-constraints = ["PLS", "PMN"]
-problem = "P123"
+constraints = ["PLS"]
+problem = "P13"
 eps_opt = 10^(-5)
 rho = 3.0
 # lambda = 0.28
@@ -61,17 +61,19 @@ time_limit = 1200
 stop_crits = ["Boyd", "Fixed_Point"]
 stop_crit = stop_crits[1]
 
-# GRB_time = @elapsed begin
-#     GRB_H = gurobi_solver(data, constraints, eps_opt)
-# end
-# GRB_H_norm_0 = matrix_norm_0(GRB_H)
-# GRB_H_norm_1 = norm(GRB_H, 1)
+GRB_time = @elapsed begin
+    GRB_H = gurobi_solver(data, constraints, eps_opt)
+end
+GRB_H_norm_0 = matrix_norm_0(GRB_H)
+GRB_H_norm_1 = norm(GRB_H, 1)
 
-# GRB_cal_time = @elapsed begin
-#     GRB_cal_H = gurobi_solver_cal(data, problem, eps_opt)
-# end
-# GRB_cal_H_norm_0 = matrix_norm_0(GRB_H)
-# GRB_cal_H_norm_1 = norm(GRB_H, 1)
+println("Gurobi done.")
+
+GRB_cal_time = @elapsed begin
+    GRB_cal_H = gurobi_solver_cal(data, problem, eps_opt)
+end
+GRB_cal_H_norm_0 = matrix_norm_0(GRB_H)
+GRB_cal_H_norm_1 = norm(GRB_H, 1)
 
 # DRS_time = @elapsed begin
 #     DRS_H, DRS_k = drs(A, lambda, problem, eps_opt)
@@ -79,11 +81,11 @@ stop_crit = stop_crits[1]
 # DRS_H_norm_0 = matrix_norm_0(DRS_H)
 # DRS_H_norm_1 = norm(DRS_H, 1)
 
-DRS_time = @elapsed begin
-    DRS_H, DRS_k = drs(A, lambda, eps_abs, eps_rel, problem, fixed_tol, eps_opt, stop_crit, time_limit)
-end
-DRS_H_norm_0 = matrix_norm_0(DRS_H)
-DRS_H_norm_1 = norm(DRS_H, 1)
+# DRS_time = @elapsed begin
+#     DRS_H, DRS_k = drs(A, lambda, eps_abs, eps_rel, problem, fixed_tol, eps_opt, stop_crit, time_limit)
+# end
+# DRS_H_norm_0 = matrix_norm_0(DRS_H)
+# DRS_H_norm_1 = norm(DRS_H, 1)
 
 # DRS_n0_time = @elapsed begin
 #     DRS_n0_H, DRS_n0_k = drs_n0(A, lambda, problem, eps_opt, stop_crit, time_limit)
@@ -161,11 +163,11 @@ end
 # time_limit = 2*60*60
 # eps_opt = epsilon
 
-ADMM_time = @elapsed begin
-    ADMM_H = admm_p123(A, rho, eps_abs, eps_rel, fixed_tol, eps_opt, time_limit)
-end
-ADMM_H_norm_0 = matrix_norm_0(ADMM_H)
-ADMM_H_norm_1 = norm(ADMM_H, 1)
+# ADMM_time = @elapsed begin
+#     ADMM_H = admm_p123(A, rho, eps_abs, eps_rel, fixed_tol, eps_opt, time_limit)
+# end
+# ADMM_H_norm_0 = matrix_norm_0(ADMM_H)
+# ADMM_H_norm_1 = norm(ADMM_H, 1)
 
 # ADMM_time = @elapsed begin
 #     ADMM_H = admm_p134(A, rho, eps_abs, eps_rel, fixed_tol, eps_opt, time_limit)
@@ -181,18 +183,18 @@ ADMM_H_norm_1 = norm(ADMM_H, 1)
 #     end
 # end
 
-# println("GRB time: $GRB_time")
-# println("GRB norm 1: $GRB_H_norm_1")
-# println("GRB norm 0: $GRB_H_norm_0")
+println("GRB time: $GRB_time")
+println("GRB norm 1: $GRB_H_norm_1")
+println("GRB norm 0: $GRB_H_norm_0")
 
-# println("GRB cal time: $GRB_cal_time")
-# println("GRB cal norm 1: $GRB_cal_H_norm_1")
-# println("GRB cal norm 0: $GRB_cal_H_norm_0")
+println("GRB cal time: $GRB_cal_time")
+println("GRB cal norm 1: $GRB_cal_H_norm_1")
+println("GRB cal norm 0: $GRB_cal_H_norm_0")
 
-println("DRS time: $DRS_time")
-println("DRS k: $DRS_k")
-println("DRS norm 1: $DRS_H_norm_1")
-println("DRS norm 0: $DRS_H_norm_0")
+# println("DRS time: $DRS_time")
+# println("DRS k: $DRS_k")
+# println("DRS norm 1: $DRS_H_norm_1")
+# println("DRS norm 0: $DRS_H_norm_0")
 
 # println("DRS n0 time: $DRS_n0_time")
 # println("DRS n0 k: $DRS_n0_k")
@@ -224,6 +226,6 @@ println("DRS norm 0: $DRS_H_norm_0")
 # println("A2DRS_Halpern_FS time: $A2DRS_Halpern_FS_time")
 # println("A2DRS_Halpern_FS norm 1: $A2DRS_Halpern_FS_H_norm_1")
 
-println("ADMM time: $ADMM_time")
-println("ADMM norm 1: $ADMM_H_norm_1")
-println("ADMM norm 0: $ADMM_H_norm_0")
+# println("ADMM time: $ADMM_time")
+# println("ADMM norm 1: $ADMM_H_norm_1")
+# println("ADMM norm 0: $ADMM_H_norm_0")

@@ -11,12 +11,20 @@ function add_constraint_P3(inst::GurobiInst, data::DataInst)
     @constraint(inst.model, data.A * inst.H .== inst.H' * data.A', base_name = "P3_")
 end
 
+function add_constraint_P13R(inst::GurobiInst, data::DataInst)
+    @constraint(inst.model, data.A * inst.H .== data.A * data.AMP, base_name = "P13R_")
+end
+
 function add_constraint_P123(inst::GurobiInst, data::DataInst)
     @constraint(inst.model, inst.H * data.A * data.AMP .== inst.H, base_name = "P123_")
 end
 
 function add_constraint_P4(inst::GurobiInst, data::DataInst)
     @constraint(inst.model, inst.H * data.A .== data.A' * inst.H', base_name = "P4_")
+end
+
+function add_constraint_P14R(inst::GurobiInst, data::DataInst)
+    @constraint(inst.model, inst.H * data.A .== data.AMP * data.A, base_name = "P14R_")
 end
 
 function add_constraint_P124(inst::GurobiInst, data::DataInst)
@@ -50,8 +58,10 @@ end
 constraints_dict = Dict(
     "P1" => add_constraint_P1,
     "P3" => add_constraint_P3,
+    "P13R" => add_constraint_P13R,
     "P123" => add_constraint_P123,
     "P4" => add_constraint_P4,
+    "P14R" => add_constraint_P14R,
     "P124" => add_constraint_P124,
     "PLS" => add_constraint_PLS,
     "PLSr" => add_constraint_PLSr,
