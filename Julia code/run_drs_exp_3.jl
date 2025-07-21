@@ -165,9 +165,15 @@ for mat_file in mat_files
                 ADMM_H_norm_1 = norm(ADMM_H, 1)
                 ADMM_H_rank = calculate_rank(ADMM_H)
 
-                solution_filename = "ADMM/Experiment_$(exp)_P134_m_$(m)_n_$(n)_idx_$(idx)"
-                solution_filepath = joinpath(solutions_folder, solution_filename)
-                matwrite(solution_filepath, Dict("H" => ADMM_H, "time" => ADMM_time))
+                if fixed_tol
+                    solution_filename = "ADMMe/Experiment_$(exp)_P134_m_$(m)_n_$(n)_idx_$(idx)"
+                    solution_filepath = joinpath(solutions_folder, solution_filename)
+                    matwrite(solution_filepath, Dict("H" => ADMM_H, "time" => ADMM_time))
+                else
+                    solution_filename = "ADMM/Experiment_$(exp)_P134_m_$(m)_n_$(n)_idx_$(idx)"
+                    solution_filepath = joinpath(solutions_folder, solution_filename)
+                    matwrite(solution_filepath, Dict("H" => ADMM_H, "time" => ADMM_time))
+                end
             end
         end
 
