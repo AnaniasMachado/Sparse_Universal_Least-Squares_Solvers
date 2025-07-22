@@ -20,7 +20,7 @@ function gurobi_solver_cal(data::DataInst, problem::String, opt_tol::Float64=10^
         @variable(model, W[1:(data.n-r), 1:(data.m-r)], lower_bound=-Inf, upper_bound=Inf)
         @variable(model, T[1:data.n, 1:data.m], lower_bound=-Inf, upper_bound=Inf)
 
-        @objective(model, Min, sum(Z[i, j] for i in 1:data.n, j in 1:data.m))
+        @objective(model, Min, sum(T[i, j] for i in 1:data.n, j in 1:data.m))
 
         G = V1 * D_inv * U1'
         H = G + V2 * W * U2'
