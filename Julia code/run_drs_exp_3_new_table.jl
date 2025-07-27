@@ -79,7 +79,7 @@ for method in methods
                 H_norm_1 = norm(H, 1)
                 H_rank = calculate_rank(H)
 
-                H_div_bound_norm_0 = H_norm_0 / (m * r + (m- r) * (n - r))
+                H_div_bound_norm_0 = H_norm_0 / (m * r + n * r - r^2)
                 H_div_AMP_norm_0 = H_norm_0 / matrix_norm_0(AMP)
                 H_div_AMP_norm_1 = H_norm_1 / norm(AMP, 1)
                 H_rank_ratio = H_rank / r
