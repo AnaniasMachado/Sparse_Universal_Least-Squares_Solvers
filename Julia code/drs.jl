@@ -253,18 +253,16 @@ function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Flo
     m, n = size(A)
     Xh = zeros(n, m)
     X = zeros(n, m)
-    # V = rand(n, m)
-    # V = pinv(A)
-    # V = generalized_inverse(A)
     # Projection data
     proj_data = get_proj_data(A , problem)
     V = proj_data.AMP
-    initial_pri_res = primal_residual_matrix(A, Xh, proj_data, problem)
-    initial_dual_res = dual_res = dual_residual_matrix(A, Xh, V, lambda, proj_data, problem)
-    r0 = norm(hcat(initial_pri_res, initial_dual_res))
-    eps_tol = eps_abs + eps_rel * r0
+    # initial_pri_res = primal_residual_matrix(A, Xh, proj_data, problem)
+    # initial_dual_res = dual_res = dual_residual_matrix(A, Xh, V, lambda, proj_data, problem)
+    # r0 = norm(hcat(initial_pri_res, initial_dual_res))
+    # eps_tol = eps_abs + eps_rel * r0
+    eps_tol = 10^(-5)
     start_time = time()
-    k = 0
+    k = -1
     while true
         k += 1
         Xh = soft_thresholding_matrix(V, lambda)
@@ -278,6 +276,12 @@ function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Flo
         # else
         #     # println("Feasible X.")
         # end
+        if k == 0
+            initial_pri_res = primal_residual_matrix(A, Xh, proj_data, problem)
+            initial_dual_res = dual_res = dual_residual_matrix(A, Xh, V, lambda, proj_data, problem)
+            r0 = norm(hcat(initial_pri_res, initial_dual_res))
+            eps_tol = eps_abs + eps_rel * r0
+        end
         V += X - Xh
         if fixed_tol
             pri_res = primal_residual(A, Xh, proj_data, problem)

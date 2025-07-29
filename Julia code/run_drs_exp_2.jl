@@ -114,7 +114,7 @@ for mat_file in mat_files
             DRS_H_rank_mean = -1.0
             DRS_time_mean = -1.0
 
-            if !("-" in DRS_time_list)
+            if !(-1.0 in DRS_H_norm_0_list)
                 DRS_H_norm_0_mean = mean(DRS_H_norm_0_list)
                 DRS_H_norm_1_mean = mean(DRS_H_norm_1_list)
                 DRS_H_rank_mean = mean(DRS_H_rank_list)

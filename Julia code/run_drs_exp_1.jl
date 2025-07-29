@@ -20,7 +20,7 @@ results_folder = "results/DRS_Experiment_$exp"
 solutions_folder = "./Solutions/DRS_Experiment_" * exp
 
 methods = ["ADMM", "DRS"]
-method = methods[1]
+method = methods[2]
 
 # Mixed parameters
 epsilon = 10^(-5)
@@ -38,7 +38,7 @@ lambda = 10^(-2)
 problems = ["P123"]
 problem = problems[1]
 stop_crits = ["Boyd", "Fixed_Point"]
-stop_crit = stop_crits[1]
+stop_crit = stop_crits[2]
 
 df = DataFrame()
 
@@ -120,7 +120,7 @@ for mat_file in mat_files
             ADMM_H_rank_mean = -1.0
             ADMM_time_mean = -1.0
 
-            if !("-" in ADMM_time_list)
+            if !(-1.0 in DRS_H_norm_0_list)
                 ADMM_H_norm_0_mean = mean(ADMM_H_norm_0_list)
                 ADMM_H_norm_1_mean = mean(ADMM_H_norm_1_list)
                 ADMM_H_rank_mean = mean(ADMM_H_rank_list)
@@ -191,7 +191,7 @@ for mat_file in mat_files
             DRS_H_rank_mean = -1.0
             DRS_time_mean = -1.0
 
-            if !("-" in DRS_time_list)
+            if !(-1.0 in DRS_H_norm_0_list)
                 DRS_H_norm_0_mean = mean(DRS_H_norm_0_list)
                 DRS_H_norm_1_mean = mean(DRS_H_norm_1_list)
                 DRS_H_rank_mean = mean(DRS_H_rank_list)
