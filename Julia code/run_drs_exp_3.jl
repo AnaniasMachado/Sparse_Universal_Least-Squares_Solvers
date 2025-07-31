@@ -20,7 +20,7 @@ results_folder = "results/DRS_Experiment_$exp"
 solutions_folder = "./Solutions/DRS_Experiment_" * exp
 
 methods = ["ADMM", "DRS"]
-method = methods[1]
+method = methods[2]
 
 # ADMM parameters
 rho = 3.0
@@ -30,7 +30,7 @@ lambda = 10^(-2)
 problems = ["P134"]
 problem = problems[1]
 stop_crits = ["Boyd", "Fixed_Point"]
-stop_crit = stop_crits[1]
+stop_crit = stop_crits[2]
 
 epsilon = 10^(-5)
 eps_abs = epsilon
