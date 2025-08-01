@@ -26,18 +26,18 @@ println("m = $m, n = $n, r = $r")
 data = DataInst(A, m, n, r, AMP=AMP)
 constraints = ["PLS"]
 problem = "PLS"
-eps_opt = 10^(-5)
 rho = 3.0
 lambda = 10^(-2)
 
-epsilon = 10^(-12)
+epsilon = 10^(-5)
+eps_opt = epsilon
 eps_abs = epsilon
-eps_rel = epsilon
+eps_rel = 10^(-4)
 fixed_tol = false
 
 time_limit = 1200
-stop_crits = ["Boyd", "Fixed_Point"]
-stop_crit = stop_crits[1]
+stop_crits = ["Epsilon", "Boyd", "Fixed_Point", "FP_Epsilon", "FP_Soft"]
+stop_crit = stop_crits[5]
 
 DRS_time = @elapsed begin
     DRS_H, DRS_k = drs(A, lambda, eps_abs, eps_rel, problem, fixed_tol, eps_opt, stop_crit, time_limit)
@@ -45,6 +45,7 @@ end
 DRS_H_norm_0 = matrix_norm_0(DRS_H)
 DRS_H_norm_1 = norm(DRS_H, 1)
 
+println("Stop crit: $stop_crit")
 println("DRS time: $DRS_time")
 println("DRS k: $DRS_k")
 println("DRS norm 1: $DRS_H_norm_1")

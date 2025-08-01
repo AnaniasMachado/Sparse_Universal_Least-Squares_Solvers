@@ -276,14 +276,17 @@ function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Flo
         # else
         #     # println("Feasible X.")
         # end
-        if k == 0
+        if (k == 0) && (stop_crit in ["Boyd", "Fixed_Point"]) 
             initial_pri_res = primal_residual_matrix(A, Xh, proj_data, problem)
             initial_dual_res = dual_res = dual_residual_matrix(A, Xh, V, lambda, proj_data, problem)
             r0 = norm(hcat(initial_pri_res, initial_dual_res))
             eps_tol = eps_abs + eps_rel * r0
+        elseif (k == 0) && (stop_crit in ["FP_Epsilon", "FP_Soft"])
+            r0 = norm(X - Xh)
+            eps_tol = eps_abs + eps_rel * r0
         end
         V += X - Xh
-        if fixed_tol
+        if fixed_tol && (stop_crit == "Epsilon")
             pri_res = primal_residual(A, Xh, proj_data, problem)
             dual_res = dual_residual(A, Xh, V, lambda, proj_data, problem)
             if (pri_res <= eps_opt) && (dual_res <= eps_opt)
@@ -295,6 +298,11 @@ function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Flo
             # println("Iteration k: $k")
             # println("Primal residual: $pri_res")
             # println("Dual residual: $dual_res")
+        elseif fixed_tol && (stop_crit == "FP_Epsilon")
+            res = norm(X - Xh)
+            if res <= eps_opt
+                break
+            end
         elseif !fixed_tol && (stop_crit == "Boyd")
             pri_res = primal_residual_matrix(A, Xh, proj_data, problem)
             dual_res = dual_residual_matrix(A, Xh, V, lambda, proj_data, problem)
@@ -317,6 +325,11 @@ function drs(A::Matrix{Float64}, lambda::Float64, eps_abs::Float64, eps_rel::Flo
             end
             # println("Iteration k: $k")
             # println("res: $(res)")
+        elseif !fixed_tol && (stop_crit == "FP_Soft")
+            res = norm(X - Xh)
+            if res <= eps_tol
+                break
+            end
         end
         # Checks time limit
         elapsed_time = time() - start_time
